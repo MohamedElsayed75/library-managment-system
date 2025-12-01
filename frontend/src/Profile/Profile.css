@@ -1,0 +1,98 @@
+.profile-wrapper {
+  padding: 30px;
+  max-width: 800px;
+  margin: auto;
+}
+
+.profile-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 45%;
+  margin: 30px auto;   
+  border-left: 20px solid #8b5e3c;
+  border-right: 20px solid #8b5e3c;
+
+  background-color: #f3e9dc;
+  padding: 30px 30px 30px 30px; 
+  
+  border-radius: 8px;
+}
+.profile-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+/* Debt box */
+.debt-box {
+  background-color: #f3e9dc;
+  border-left: 20px solid #8b5e3c;
+  border-right: 20px solid #8b5e3c;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.debt-amount {
+  font-size: 26px;
+  font-weight: bold;
+  color: #8b5e3c;
+}
+
+/* Borrowed books box */
+.borrowed-box,
+.reserved-box {
+  background-color: #fff3e6;
+  border-left: 20px solid #8b5e3c;
+  border-right: 20px solid #8b5e3c;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.borrowed-box h2,
+.reserved-box h2 {
+  color: #000000;
+  margin-bottom: 15px;
+}
+
+ul {
+  list-style: none;
+  padding-left: 0;
+  color: #8b5e3c;
+}
+
+li {
+  margin-bottom: 8px;
+  color: #8b5e3c;
+}
+.borrowed-box p ,.reserved-box p{
+  padding-top: 10px;
+  font-size: 26px;
+  font-weight: bold;
+  color: #8b5e3c;
+}
+.back-button {
+  position: absolute;
+  top: 50px;
+  left: 50px;
+
+  border-left: 20px solid #8b5e3c;
+  border-right: 20px solid #8b5e3c;
+
+  background-color: #f3e9dc;
+  color: #8b5e3c;
+
+  padding: 15px 25px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 20px;
+  transition: 0.3s;
+}
+
+
+.back-button:hover {
+  background-color: #c08c5a;
+  color: white;
+}

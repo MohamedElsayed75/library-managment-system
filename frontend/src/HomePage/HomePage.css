@@ -1,0 +1,44 @@
+.homepage-wrapper {
+  font-family: Arial, sans-serif;
+  min-height: 50vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* HEADER */
+.homepage-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 20px 30px;
+  background-color: #724d31;
+}
+
+/* BUTTON GROUPS */
+.left-buttons,
+.right-buttons {
+  display: flex;
+  gap: 15px;
+}
+
+.homepage-header button {
+  padding: 10px 25px;
+  background-color: #d4a373;
+  border-left: 5px solid #ae774d ;
+  border-right:5px solid #ae774d;
+  border-top: none;
+  border-bottom: none;
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.homepage-header button:hover {
+  background-color: #c08c5a;
+  color: white;
+}
+
+/* BOOKS SECTION */
+.homepage-main {
+  flex: 1;
+}
