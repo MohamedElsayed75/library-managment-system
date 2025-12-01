@@ -1,9 +1,9 @@
 import React from "react";
-import "./SignUp.css";
+import "./Register.css";
 import { Link, useNavigate } from "react-router-dom";
-const SignUp = () => {
+const Register = () => {
   const navigate = useNavigate();
-  const handleSignUp = (e) => {
+  const handleRegister = (e) => {
     e.preventDefault();
     // Your implementation goes here
 
@@ -12,9 +12,9 @@ const SignUp = () => {
   };
   
   return (
-    <div className="signup-wrapper">
-      <div className="signup-container">
-        <h2>Library Sign Up</h2>
+    <div className="register-wrapper">
+      <div className="register-container">
+        <h2>Library Register</h2>
 
         <div className="input-group">
           <label htmlFor="username">Username</label>
@@ -36,8 +36,8 @@ const SignUp = () => {
           <input type="text" id="address" placeholder="Enter address" />
         </div>
 
-        <button className="btn-signup" onClick={handleSignUp}>
-          Sign Up
+        <button className="btn-register" onClick={handleRegister}>
+          Register
         </button>
         <p className="auth-switch">
         Already have an account? <Link to="/">Log In</Link>
@@ -47,4 +47,4 @@ const SignUp = () => {
   );
 };
 
-export default SignUp;
+export default Register;

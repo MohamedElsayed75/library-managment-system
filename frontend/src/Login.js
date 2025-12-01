@@ -39,7 +39,7 @@ function Login() {
           Login
         </button>
         <p className="auth-switch">
-        Don't have an account? <Link to="/signup">Sign Up</Link>
+        Don't have an account? <Link to="/register">Register</Link>
         </p>
       </div>
     </div>
