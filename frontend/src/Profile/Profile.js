@@ -6,25 +6,46 @@ import BorrowedBooks from "./BorrowedBooks";
 import ReservedBooks from "./ReservedBooks";
 import "./Profile.css";
 
+/**
+ * Profile Component
+ * -----------------
+ * Displays the user's profile page with:
+ * - Debt information
+ * - Borrowed books
+ * - Reserved books
+ * 
+ * Data is loaded from localStorage and managed via React state.
+ */
 const Profile = () => {
-  const [amountOwed, setAmountOwed] = useState(0);
-  const [borrowedBooks, setBorrowedBooks] = useState([]);
-  const [reservedBooks, setReservedBooks] = useState([]);
+  const [amountOwed, setAmountOwed] = useState(0);           // Total debt amount
+  const [borrowedBooks, setBorrowedBooks] = useState([]);    // List of borrowed books
+  const [reservedBooks, setReservedBooks] = useState([]);    // List of reserved books
 
+  // Load profile data on component mount
   useEffect(() => {
     loadProfileData();
   }, []);
 
+  /**
+   * Load all profile data
+   */
   const loadProfileData = async () => {
     await fetchDebt();
     await fetchBorrowed();
     await fetchReserved();
   };
 
+  /**
+   * Fetch debt information
+   * Currently sets to 0 (placeholder)
+   */
   const fetchDebt = async () => {
     setAmountOwed(0); 
   };
 
+  /**
+   * Fetch borrowed books from localStorage
+   */
   const fetchBorrowed = async () => {
     const stored = localStorage.getItem("borrowedBooks");
     if (stored) {
@@ -34,6 +55,9 @@ const Profile = () => {
     }
   };
 
+  /**
+   * Fetch reserved books from localStorage
+   */
   const fetchReserved = async () => {
     const stored = localStorage.getItem("requestedBooks");
     if (stored) {
@@ -41,16 +65,15 @@ const Profile = () => {
     }
   };
 
-  // --- NEW FUNCTION: CLEAR DATA ---
+  /**
+   * Clear all borrowed and reserved book data
+   * Updates localStorage and UI state
+   */
   const handleClearData = () => {
-    // Clear from Local Storage
     localStorage.removeItem("borrowedBooks");
     localStorage.removeItem("requestedBooks");
-  
-    // Update state (instantly updates UI)
     setBorrowedBooks([]);
     setReservedBooks([]);
-  
     alert("All borrowed and requested history has been cleared.");
   };
 
@@ -58,11 +81,12 @@ const Profile = () => {
     <div className="profile-wrapper">
       <h2 className="profile-title">My BookShelf</h2>
 
+      {/* Back button */}
       <button className="back-button" onClick={() => window.history.back()}>
-       Back
+        Back
       </button>
 
-      {/* NEW: RESET BUTTON (Top Right of Profile) */}
+      {/* Clear History button (top right) */}
       <button 
         onClick={handleClearData}
         style={{
@@ -70,7 +94,7 @@ const Profile = () => {
           top: "50px",
           right: "50px",
           padding: "15px 25px",
-          backgroundColor: "#d9534f", // Red color
+          backgroundColor: "#d9534f",
           color: "white",
           border: "none",
           borderRadius: "8px",
@@ -83,6 +107,7 @@ const Profile = () => {
         Clear History
       </button>
       
+      {/* Profile sections */}
       <div className="profile-sections">
         <DebtBox amountOwed={amountOwed} />
         <BorrowedBooks books={borrowedBooks} />
@@ -93,10 +118,3 @@ const Profile = () => {
 };
 
 export default Profile;
-
-
-
-
-
-
-

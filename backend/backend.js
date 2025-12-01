@@ -16,3 +16,8 @@ app.use("PATH HERE", loansRouter);
 
 const membersRouter = require("./routes/members");
 app.use("PATH HERE", membersRouter);
+
+
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});

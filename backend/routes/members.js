@@ -3,9 +3,12 @@ const router = express.Router();
 
 // register and login post/gets
 
-router.get("/signup", (req, res) => {
-    
-})
+router.route("/members")
+    .get((req, res) => {
+    })
+    .post((req, res) => {
+    });
+
 
 
 module.exports = router;
