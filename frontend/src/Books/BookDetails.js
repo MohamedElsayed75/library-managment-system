@@ -2,60 +2,48 @@ import React from "react";
 
 const BookDetails = ({ book, onClose }) => {
 
-  // --- WHEN USER BORROWS A BOOK ---
-  const handleBorrow = () => {
-    const stored = JSON.parse(localStorage.getItem("borrowedBooks") || "[]");
+  /* ---------------------------------------------------------
+     HANDLE BORROW (Frontend → Backend)
+     ---------------------------------------------------------
+     This just sends a request to the backend.
+     Backend will:
+     - check availability
+     - reduce number of copies
+     - create borrow record
+     - return success/error
+  --------------------------------------------------------- */
+  const handleBorrow = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/books/borrow", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookId: book.id }),
+      });
 
-    // prevent duplicates
-    const alreadyBorrowed = stored.find((b) => b.id === book.id);
-    if (alreadyBorrowed) {
-      alert("You already borrowed this book!");
-      return;
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Could not borrow book.");
+        return;
+      }
+
+      alert(`You borrowed: ${book.title}`);
+      onClose();
+
+    } catch (err) {
+      console.error("Borrow request failed:", err);
+      alert("Error: unable to borrow book.");
     }
-
-    const newBorrow = {
-      id: book.id,
-      title: book.title,
-      daysRemaining: 14, // Example: 14 days return time
-      dateBorrowed: new Date().toLocaleDateString()
-    };
-
-    const updated = [...stored, newBorrow];
-    localStorage.setItem("borrowedBooks", JSON.stringify(updated));
-
-    alert(`You borrowed: ${book.title}`);
-    onClose();
   };
 
-  // --- WHEN USER REQUESTS A BOOK ---
-  const handleRequest = () => {
-    const stored = JSON.parse(localStorage.getItem("requestedBooks") || "[]");
-
-    // avoid duplicates
-    const alreadyReq = stored.find((b) => b.id === book.id);
-    if (alreadyReq) {
-      alert("You already requested this book!");
-      return;
-    }
-
-    const newRequest = {
-      id: book.id,
-      title: book.title,
-      status: "Requested",
-      date: new Date().toLocaleDateString(),
-    };
-
-    const updated = [...stored, newRequest];
-    localStorage.setItem("requestedBooks", JSON.stringify(updated));
-
-    alert(`You Requested: ${book.title}`);
-    onClose();
-  };
-
+  /* ---------------------------------------------------------
+     UI ONLY — No business logic, no localStorage
+  --------------------------------------------------------- */
   return (
     <div className="book-details-overlay">
       <div className="book-details-box">
 
+        {/* Close popup */}
         <button className="close-btn" onClick={onClose}>X</button>
 
         <h2>{book.title}</h2>
@@ -65,8 +53,9 @@ const BookDetails = ({ book, onClose }) => {
         <p><strong>Publication Year:</strong> {book.year}</p>
         <p><strong>Author(s):</strong> {book.authors}</p>
         <p><strong>Publisher:</strong> {book.publisher}</p>
-        <p><strong>Number of Copies:</strong> {book.copies}</p>
+        <p><strong>Copies:</strong> {book.copies}</p>
 
+        {/* Availability status */}
         <p>
           <strong>Status:</strong>{" "}
           <span className={book.copies > 0 ? "available" : "not-available"}>
@@ -74,16 +63,18 @@ const BookDetails = ({ book, onClose }) => {
           </span>
         </p>
 
+        {/* Borrow button only if copies are available */}
         {book.copies > 0 && (
           <button className="borrow-btn" onClick={handleBorrow}>
             Borrow
           </button>
         )}
 
+        {/* If no copies, no request button anymore */}
         {book.copies === 0 && (
-          <button className="Register-btn" onClick={handleRequest}>
-            Request
-          </button>
+          <p style={{ color: "#777", marginTop: "10px" }}>
+            No copies available to borrow.
+          </p>
         )}
 
       </div>

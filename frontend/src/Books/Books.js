@@ -4,105 +4,110 @@ import BookDetails from "./BookDetails";
 import "./Books.css";
 
 const Books = () => {
+
+  // Books loaded from backend
   const [books, setBooks] = useState([]);
+
+  // Book selected for viewing details
   const [selectedBook, setSelectedBook] = useState(null);
 
-  // --- SEARCH STATE ---
-  // 1. Tracks exactly what the user types in real-time
+  // Search field input (changes immediately)
   const [searchQuery, setSearchQuery] = useState("");
-  
-  // 2. Tracks the value AFTER the user stops typing (triggered by timer)
+
+  // Debounced search value (updates after user stops typing)
   const [debouncedQuery, setDebouncedQuery] = useState("");
 
+  /* ----------------------------------------------------------
+     1. LOAD BOOKS FROM BACKEND
+     ---------------------------------------------------------- */
   useEffect(() => {
-    fetchAllBooks();
+    const fetchBooks = async () => {
+      try {
+        // Placeholder API call — replace with your backend URL
+        const res = await fetch("http://localhost:5000/api/books");
+
+        const data = await res.json();
+
+        setBooks(data); // store data from backend
+
+      } catch (err) {
+        console.error("Failed to load books:", err);
+      }
+    };
+
+    fetchBooks();
   }, []);
 
-  // --- DEBOUNCE TIMER ---
-  // Updates debouncedQuery only after 500ms of inactivity
+  /* ----------------------------------------------------------
+     2. SEARCH DEBOUNCE (waits 500ms after typing)
+     ---------------------------------------------------------- */
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedQuery(searchQuery);
-    }, 500); 
+    }, 500);
 
-    // Cleanup: If user types again before 500ms, clear the old timer
-    return () => {
-      clearTimeout(timer);
-    };
+    return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  const fetchAllBooks = async () => {
-    try {
-      const res = await fetch("https://gutendex.com/books");
-      const data = await res.json();
-      
-// Inside fetchAllBooks function...
-      const mapped = data.results.map((b) => {
-        return {
-          id: b.id,
-          isbn: b.id + "",
-          title: b.title,
-          // --- NEW CODE: GRAB IMAGE ---
-          image: b.formats["image/jpeg"], 
-          // ----------------------------
-          genre: b.bookshelves && b.bookshelves.length > 0 ? b.bookshelves[0] : "Unknown",
-          year: b.download_count,
-          authors: b.authors.map((a) => a.name).join(", "),
-          publisher: "Unknown Publisher", 
-          copies: Math.floor(Math.random() * 10),
-        };
-      });
-      setBooks(mapped);
-    } catch (err) {
-      console.error("Failed to fetch books", err);
-    }
-  };
-
-  // --- FILTERING ---
-  // We filter based on 'debouncedQuery' so the list doesn't jump around while typing
-  const filteredBooks = books.filter((book) => 
+  /* ----------------------------------------------------------
+     3. FILTER BOOKS BASED ON SEARCH
+     ---------------------------------------------------------- */
+  const filteredBooks = books.filter((book) =>
     book.title.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
     book.authors.toLowerCase().includes(debouncedQuery.toLowerCase())
   );
 
-  // Helper to know if we are "waiting" for the timer
   const isTyping = searchQuery !== debouncedQuery;
 
+  /* ----------------------------------------------------------
+     4. RENDER UI
+     ---------------------------------------------------------- */
   return (
     <div className="books-wrapper">
       <h2 className="books-title">Library Books</h2>
 
-      {/* --- SEARCH BAR UI --- */}
+      {/* ------------------------ SEARCH BAR ------------------------ */}
       <div className="search-container">
-        <input 
-          type="text" 
+
+        <input
+          type="text"
           className="search-input"
           placeholder="Search by title or author..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
-        {/* 'X' Button appears only when there is text */}
+
         {searchQuery && (
-          <button 
-            className="clear-search-btn" 
-            onClick={() => { setSearchQuery(""); setDebouncedQuery(""); }}
+          <button
+            className="clear-search-btn"
+            onClick={() => {
+              setSearchQuery("");
+              setDebouncedQuery("");
+            }}
           >
             X
           </button>
         )}
       </div>
 
-      {/* --- BOOKS GRID --- */}
+      {/* ------------------------ BOOK GRID ------------------------ */}
       <div className="books-grid">
+
+        {/* Backend returned no books */}
         {books.length === 0 ? (
-          <p className="loading-text">Loading library catalog...</p>
-        ) : isTyping ? ( 
-          // Show "Searching..." while the debounce timer is running
-          <div className="loading-text">Searching...</div>
+          <p className="loading-text">Loading books...</p>
+
+        /* Waiting for debounce while typing */
+        ) : isTyping ? (
+          <p className="loading-text">Searching...</p>
+
+        /* No matches */
         ) : filteredBooks.length === 0 ? (
           <div className="no-results">
             <p>No books found matching "<strong>{debouncedQuery}</strong>"</p>
           </div>
+
+        /* Show filtered books */
         ) : (
           filteredBooks.map((book) => (
             <BookCard
@@ -114,8 +119,12 @@ const Books = () => {
         )}
       </div>
 
+      {/* ------------------------ BOOK DETAILS MODAL ------------------------ */}
       {selectedBook && (
-        <BookDetails book={selectedBook} onClose={() => setSelectedBook(null)} />
+        <BookDetails
+          book={selectedBook}
+          onClose={() => setSelectedBook(null)}
+        />
       )}
     </div>
   );
