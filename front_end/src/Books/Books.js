@@ -8,24 +8,23 @@ const Books = () => {
   const [selectedBook, setSelectedBook] = useState(null);
 
   // --- SEARCH STATE ---
-  // 1. Tracks exactly what the user types in real-time
   const [searchQuery, setSearchQuery] = useState("");
-  
-  // 2. Tracks the value AFTER the user stops typing (triggered by timer)
   const [debouncedQuery, setDebouncedQuery] = useState("");
+
+  // --- NEW STATE: SELECTED CATEGORY ---
+  // We start with "All" to show everything initially
+  const [selectedCategory, setSelectedCategory] = useState("All");
 
   useEffect(() => {
     fetchAllBooks();
   }, []);
 
   // --- DEBOUNCE TIMER ---
-  // Updates debouncedQuery only after 500ms of inactivity
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedQuery(searchQuery);
-    }, 500); 
+    }, 500);
 
-    // Cleanup: If user types again before 500ms, clear the old timer
     return () => {
       clearTimeout(timer);
     };
@@ -35,20 +34,18 @@ const Books = () => {
     try {
       const res = await fetch("https://gutendex.com/books");
       const data = await res.json();
-      
-// Inside fetchAllBooks function...
+
       const mapped = data.results.map((b) => {
         return {
           id: b.id,
           isbn: b.id + "",
           title: b.title,
-          // --- NEW CODE: GRAB IMAGE ---
-          image: b.formats["image/jpeg"], 
-          // ----------------------------
+          image: b.formats["image/jpeg"],
+          // Note: API returns "bookshelves", we use that as genre/category
           genre: b.bookshelves && b.bookshelves.length > 0 ? b.bookshelves[0] : "Unknown",
           year: b.download_count,
           authors: b.authors.map((a) => a.name).join(", "),
-          publisher: "Unknown Publisher", 
+          publisher: "Unknown Publisher",
           copies: Math.floor(Math.random() * 10),
         };
       });
@@ -58,34 +55,68 @@ const Books = () => {
     }
   };
 
-  // --- FILTERING ---
-  // We filter based on 'debouncedQuery' so the list doesn't jump around while typing
-  const filteredBooks = books.filter((book) => 
-    book.title.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
-    book.authors.toLowerCase().includes(debouncedQuery.toLowerCase())
-  );
+  // --- GET UNIQUE CATEGORIES ---
+  // This looks at all loaded books and extracts a list of unique genres
+  // We add "All" at the start so the user can reset the filter
+  const categories = ["All", ...new Set(books.map((b) => b.genre))];
 
-  // Helper to know if we are "waiting" for the timer
+  // --- UPDATED FILTERING LOGIC ---
+  const filteredBooks = books.filter((book) => {
+    // 1. Text Search Condition
+    const matchesSearch =
+      book.title.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
+      book.authors.toLowerCase().includes(debouncedQuery.toLowerCase());
+
+    // 2. Category Dropdown Condition
+    // If "All" is selected, we accept everything.
+    // Otherwise, the book's genre must match exactly.
+    const matchesCategory =
+      selectedCategory === "All" || book.genre === selectedCategory;
+
+    // Both conditions must be true to show the book
+    return matchesSearch && matchesCategory;
+  });
+
   const isTyping = searchQuery !== debouncedQuery;
 
   return (
     <div className="books-wrapper">
       <h2 className="books-title">Library Books</h2>
 
-      {/* --- SEARCH BAR UI --- */}
+      {/* --- SEARCH & FILTER BAR --- */}
       <div className="search-container">
-        <input 
-          type="text" 
+        
+        {/* 1. Text Input */}
+        <input
+          type="text"
           className="search-input"
           placeholder="Search by title or author..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
-        {/* 'X' Button appears only when there is text */}
-        {searchQuery && (
-          <button 
-            className="clear-search-btn" 
-            onClick={() => { setSearchQuery(""); setDebouncedQuery(""); }}
+
+        {/* 2. Category Dropdown (NEW) */}
+        <select
+          className="category-select"
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value)}
+        >
+          {categories.map((cat, index) => (
+            <option key={index} value={cat}>
+              {cat}
+            </option>
+          ))}
+        </select>
+
+        {/* 3. Clear Button */}
+        {(searchQuery || selectedCategory !== "All") && (
+          <button
+            className="clear-search-btn"
+            onClick={() => {
+              setSearchQuery("");
+              setDebouncedQuery("");
+              setSelectedCategory("All"); // Reset category too
+            }}
           >
             X
           </button>
@@ -96,12 +127,14 @@ const Books = () => {
       <div className="books-grid">
         {books.length === 0 ? (
           <p className="loading-text">Loading library catalog...</p>
-        ) : isTyping ? ( 
-          // Show "Searching..." while the debounce timer is running
+        ) : isTyping ? (
           <div className="loading-text">Searching...</div>
         ) : filteredBooks.length === 0 ? (
           <div className="no-results">
-            <p>No books found matching "<strong>{debouncedQuery}</strong>"</p>
+            <p>
+              No books found matching "<strong>{debouncedQuery}</strong>" in{" "}
+              <strong>{selectedCategory}</strong>
+            </p>
           </div>
         ) : (
           filteredBooks.map((book) => (
