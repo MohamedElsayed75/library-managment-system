@@ -1,0 +1,84 @@
+
+body {
+  background-image: url(Books/bookshelves.png);
+}
+
+
+.signup-wrapper {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+
+.signup-container {
+  background-color: #fcf4d2f5;
+  width: 400px;
+  padding: 25px;
+  border-radius: 15px;
+  box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.6);
+  margin: 0 auto;
+}
+
+
+.signup-container h2 {
+  display: block;
+  font-size: 26px;
+  font-weight: bold;
+  text-align: center;
+  padding: 20px;
+  background-color: #8b5e3c;
+  color: #ffffff;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+
+.input-group {
+  margin-bottom: 15px;
+  font-weight: bolder;
+  font-size: larger;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.input-group label {
+  display: block;
+  font-size: 25px;
+  margin-bottom: 10px;
+}
+
+.input-group input {
+  width: 90%;
+  border-radius: 9px;
+  border: 1px solid #ccc;
+  background-color: #f3e9dc;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.3s ease;
+}
+
+.input-group input:hover {
+  background-color: #ece8e8;
+}
+
+.btn-signup {
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  border: none;
+  background-color: #8b5e3c;
+  color: #ffffff;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 24px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  margin-top: 10px;
+}
+
+.btn-signup:hover {
+  background-color: #1ab502;
+  transform: scale(1.05);
+}
+
