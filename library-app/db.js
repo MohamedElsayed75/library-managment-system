@@ -2,14 +2,21 @@
 const mysql = require("mysql2/promise");
 
 async function connect() {
-    const conn = await mysql.createConnection({
-        host: "localhost",
-        user: "root",
-        password: "1234567",
-        database: "library"
-    });
+    try{
+        const conn = await mysql.createConnection({
+            host: "localhost",
+            user: "root",
+            password: "password123",
+            database: "librarydb",
+            port: 3306
+        });
 
-    return conn;
+        console.log("Database connected.")
+        return conn;
+    }
+ catch (error) {
+    console.error("Database not connected", error.message);
+    throw error;
 }
-
+}
 module.exports = { connect };
