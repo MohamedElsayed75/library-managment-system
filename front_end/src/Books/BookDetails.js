@@ -62,25 +62,25 @@ const BookDetails = ({ book, onClose }) => {
 
         <p><strong>ISBN:</strong> {book.isbn}</p>
         <p><strong>Genre:</strong> {book.genre}</p>
-        <p><strong>Publication Year:</strong> {book.year}</p>
+        <p><strong>Publication Year:</strong> {book.publication_year}</p>
         <p><strong>Author(s):</strong> {book.authors}</p>
-        <p><strong>Publisher:</strong> {book.publisher}</p>
-        <p><strong>Number of Copies:</strong> {book.copies}</p>
+        <p><strong>Publisher:</strong> {book.publisher_name}</p>
+        <p><strong>Number of Copies:</strong> {book.available_copies}</p>
 
         <p>
           <strong>Status:</strong>{" "}
-          <span className={book.copies > 0 ? "available" : "not-available"}>
-            {book.copies > 0 ? "Available" : "Not Available"}
+          <span className={book.available_copies > 0 ? "available" : "not-available"}>
+            {book.available_copies > 0 ? "Available" : "Not Available"}
           </span>
         </p>
 
-        {book.copies > 0 && (
+        {book.available_copies > 0 && (
           <button className="borrow-btn" onClick={handleBorrow}>
             Borrow
           </button>
         )}
 
-        {book.copies === 0 && (
+        {book.available_copies === 0 && (
           <button className="Register-btn" onClick={handleRequest}>
             Request
           </button>

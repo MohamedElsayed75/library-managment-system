@@ -1,5 +1,7 @@
 import React from "react";
 
+// Maybe remove book card since how would we even add it?
+
 const BookCard = ({ book, onClick }) => {
   return (
     <div className="book-card" onClick={onClick}>
@@ -19,12 +21,12 @@ const BookCard = ({ book, onClick }) => {
 
       <h3>{book.title}</h3>
      
-      <p><strong>Author:</strong> {book.authors}</p>
+      <p><strong>Publisher:</strong> {book.publisher_name}</p>
       {/* <p><strong>Genre:</strong> {book.genre}</p> */}
-      <p><strong>Year:</strong> {book.year}</p>
+      <p><strong>Year:</strong> {book.publication_year}</p>
 
-      <span className={book.copies > 0 ? "available" : "not-available"}>
-        {book.copies > 0 ? "Available" : "Unavailable"}
+      <span className={book.available_copies > 0 ? "available" : "not-available"}>
+        {book.available_copies > 0 ? "Available" : "Unavailable"}
       </span>
     </div>
   );

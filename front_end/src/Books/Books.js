@@ -30,30 +30,20 @@ const Books = () => {
     };
   }, [searchQuery]);
 
+  /* TODO: REMOVE DUMMY DATA GENERATE OWN DUMMY DATA. */
   const fetchAllBooks = async () => {
     try {
-      const res = await fetch("https://gutendex.com/books");
+      const res = await fetch("http://localhost:5001/api/books");
       const data = await res.json();
-
-      const mapped = data.results.map((b) => {
-        return {
-          id: b.id,
-          isbn: b.id + "",
-          title: b.title,
-          image: b.formats["image/jpeg"],
-          // Note: API returns "bookshelves", we use that as genre/category
-          genre: b.bookshelves && b.bookshelves.length > 0 ? b.bookshelves[0] : "Unknown",
-          year: b.download_count,
-          authors: b.authors.map((a) => a.name).join(", "),
-          publisher: "Unknown Publisher",
-          copies: Math.floor(Math.random() * 10),
-        };
-      });
-      setBooks(mapped);
-    } catch (err) {
+      setBooks(data);
+      }
+     catch (err) {
       console.error("Failed to fetch books", err);
     }
   };
+
+
+  /* I think this also needs to get changed? */
 
   // --- GET UNIQUE CATEGORIES ---
   // This looks at all loaded books and extracts a list of unique genres
@@ -62,20 +52,19 @@ const Books = () => {
 
   // --- UPDATED FILTERING LOGIC ---
   const filteredBooks = books.filter((book) => {
-    // 1. Text Search Condition
-    const matchesSearch =
-      book.title.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
-      book.authors.toLowerCase().includes(debouncedQuery.toLowerCase());
+  const title = book.title?.toLowerCase() || "";
+  const genre = book.genre || "";
+  const q = debouncedQuery.toLowerCase();
 
-    // 2. Category Dropdown Condition
-    // If "All" is selected, we accept everything.
-    // Otherwise, the book's genre must match exactly.
-    const matchesCategory =
-      selectedCategory === "All" || book.genre === selectedCategory;
+  const matchesSearch = title.includes(q);
 
-    // Both conditions must be true to show the book
-    return matchesSearch && matchesCategory;
-  });
+  const matchesCategory =
+    selectedCategory === "All" || genre === selectedCategory;
+
+  return matchesSearch && matchesCategory;
+});
+
+
 
   const isTyping = searchQuery !== debouncedQuery;
 
