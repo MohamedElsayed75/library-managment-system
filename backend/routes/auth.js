@@ -49,18 +49,19 @@ router.post('/login', async (req, res) => {
         const { email, password } = req.body;
 
         if (!email || !password) {
-            return res.status(400).json({ error: "Email and password are required" });
+            return res.status(400).json({ errorMessage: "Email and password are required" });
         }
 
         const member = await getMemberByEmail(email);
 
         if (!member || member.password !== password) {
-            return res.status(400).json({ error: "Invalid email or password" });
+            return res.status(400).json({ errorMessage: "Invalid email or password" });
         }
 
         await logAction(member.member_id, "User logged in");
 
         res.json({
+            success: true,
             message: "Login successful",
             member: {
                 member_id: member.member_id,
@@ -72,7 +73,7 @@ router.post('/login', async (req, res) => {
 
     } catch (err) {
         console.error("LOGIN ERROR:", err);
-        res.status(500).json({ error: "Server error" });
+        res.status(500).json({ errorMessage: "Server error" });
     }
 });
 

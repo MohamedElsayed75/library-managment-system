@@ -20,7 +20,7 @@ function Login() {
     // Clear previous error
     setError("");
 
-    // Frontend validation (minimal, optional)
+    // Frontend validation
     if (!email || !password) {
       setError("Please enter both email and password.");
       return;
@@ -29,7 +29,7 @@ function Login() {
     try {
       // --- BACKEND CALL ---
       // Send credentials to Node.js backend API
-      const response = await fetch("http://localhost:3000/auth/login", {
+      const response = await fetch("http://localhost:5000/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -39,7 +39,7 @@ function Login() {
 
       if (!data.success) {
         // Show error from backend
-        setError(data.message || "Login failed");
+        setError(data.errorMessage || "Login failed");
         return;
       }
 
