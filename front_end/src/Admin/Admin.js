@@ -22,7 +22,7 @@ const Admin = () => {
             id: b.id,
             title: b.title,
             author: b.authors[0]?.name || "Unknown",
-            image: b.formats["image/jpeg"]
+            image: b.formats["image/jpeg"]  
         }));
         setBooks(simpleList);
       });
