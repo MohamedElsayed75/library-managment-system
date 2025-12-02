@@ -22,15 +22,15 @@ router.post('/register', async (req, res) => {
         // Check if email already exists
         const exists = await getMemberByEmail(email);
         if (exists) {
-            return res.status(400).json({ error: "Email already registered" });
+            return res.status(400).json({ errorMessage: "Email already registered" });
         }
 
         // Store user exactly as provided
         const newId = await registerMember(name, email, password, address);
 
-        await logAction(newId, "User registered");
 
         res.json({
+            success: true,
             message: "Registration successful",
             member_id: newId
         });

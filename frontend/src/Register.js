@@ -20,8 +20,8 @@ const Register = () => {
     setError("");
 
     // Minimal frontend validation
-    if (!username || !email || !password) {
-      setError("Username, email, and password are required.");
+    if (!username || !email || !password || !address) {
+      setError("All fields are required.");
       return;
     }
 
