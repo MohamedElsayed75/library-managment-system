@@ -18,9 +18,9 @@
 /* Form Styling */
 .add-book-form {
     display: flex;
-    flex-direction: column;   /* <-- STACK DOWNWARD */
-    gap: 15px;                /* space between inputs */
-    width: 100%;              /* full width */
+    flex-direction: column;   
+    gap: 15px;              
+    width: 100%;             
 }
 .add-book-form input {
     flex: 1;
