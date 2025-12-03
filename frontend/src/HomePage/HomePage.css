@@ -9,8 +9,10 @@
 .homepage-header {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   padding: 20px 30px;
   background-color: #724d31;
+  color: white;
 }
 
 /* BUTTON GROUPS */
@@ -18,13 +20,22 @@
 .right-buttons {
   display: flex;
   gap: 15px;
+  align-items: center;
 }
 
+/* WELCOME TEXT */
+.welcome-text {
+  font-size: 18px;
+  font-weight: bold;
+  color: #f5e9dc;
+}
+
+/* BUTTONS */
 .homepage-header button {
   padding: 10px 25px;
   background-color: #d4a373;
-  border-left: 5px solid #ae774d ;
-  border-right:5px solid #ae774d;
+  border-left: 5px solid #ae774d;
+  border-right: 5px solid #ae774d;
   border-top: none;
   border-bottom: none;
   border-radius: 10px;
