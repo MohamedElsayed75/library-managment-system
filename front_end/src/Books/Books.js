@@ -40,11 +40,11 @@ const Books = () => {
         isbn: b.isbn,
         title: b.title,
         genre: b.genre,
-        year: b.publication_year,           
+        publication_year: b.publication_year,           
         language: b.language,
         authors: b.authors || "Unknown",     
-        publisher: b.publisher_name || "Unknown",  
-        copies: b.available_copies || 0,             
+        publisher_name: b.publisher_name || "Unknown",  
+        available_copies: b.available_copies || 0,             
         image: b.image_url || null
       }));
 

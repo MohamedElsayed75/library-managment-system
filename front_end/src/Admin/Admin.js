@@ -5,33 +5,57 @@ const Admin = () => {
   // 1. STATE: To hold the list of books for the admin to manage
   const [books, setBooks] = useState([]);
   
+  // BookId is not fucking auto increment KILL MEEEEE.
+  // Books: book_id, publisher_id, isbn, title, genre, language, publication_year.
+  // Maybe use joins to add publisher_name and author_id/name?
   // 2. STATE: To hold the form data (what the admin is typing)
   const [newBook, setNewBook] = useState({
+    isbn: "",
     title: "",
+    genre: "",
+    language: "",
+    year: "", 
     author: "",
+    genre: "",
     image: ""
   });
 
-  // Load the initial books (Simulating fetching from database)
   useEffect(() => {
-    fetch("https://gutendex.com/books")
-      .then(res => res.json())
-      .then(data => {
-        // We just take the first 10 for the admin demo to keep it clean
-        const simpleList = data.results.slice(0, 10).map(b => ({
-            id: b.id,
-            title: b.title,
-            author: b.authors[0]?.name || "Unknown",
-            image: b.formats["image/jpeg"]  
-        }));
-        setBooks(simpleList);
-      });
+    fetchAllBooks();
   }, []);
+
+  // Load the initial books (Simulating fetching from database)
+const fetchAllBooks = async () => {
+    try {
+      const res = await fetch("http://localhost:5001/api/books");
+      const data = await res.json();
+      
+      const formatted = data.map(b => ({
+        id: b.book_id,                     
+        isbn: b.isbn,
+        title: b.title,
+        genre: b.genre,
+        year: b.publication_year,           
+        language: b.language,
+        authors: b.authors || "Unknown",     
+        publisher: b.publisher_name || "Unknown",  
+        copies: b.available_copies || 0,             
+        image: b.image_url || null
+      }));
+
+      setBooks(formatted);
+    } catch (err) {
+      console.error("Failed to fetch books", err);
+    }
+  };
+
+// TO DO: COMPLETE REST OF INFO IN ADD BOOK.
+// ADD LOGIC FOR COPY INCREASE OR DECREASE IN ADMIN AND BOOKS.
 
   // --- FUNCTION: HANDLE INPUT CHANGE ---
   // This updates 'newBook' state whenever you type in the form
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value } = e.target; 
     setNewBook({ ...newBook, [name]: value });
   };
 
@@ -91,6 +115,34 @@ const Admin = () => {
                 value={newBook.author}
                 onChange={handleInputChange} 
                 required 
+            />
+            <input 
+                type="text" 
+                name="isbn" 
+                placeholder="ISBN " 
+                value={newBook.isbn}
+                onChange={handleInputChange} 
+            />
+            <input 
+                type="text" 
+                name="year" 
+                placeholder="Publication Year" 
+                value={newBook.year}
+                onChange={handleInputChange} 
+            />
+            <input 
+                type="text" 
+                name="genre" 
+                placeholder="Genre" 
+                value={newBook.genre}
+                onChange={handleInputChange} 
+            />
+            <input 
+                type="text" 
+                name="language" 
+                placeholder="Language (optional)" 
+                value={newBook.language}
+                onChange={handleInputChange} 
             />
              <input 
                 type="text" 
