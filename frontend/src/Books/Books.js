@@ -1,9 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { verifyTokenRequest } from "../services/api";
 import BookCard from "./BookCard";
 import BookDetails from "./BookDetails";
 import "./Books.css";
 
-const Books = () => {
+const Books = ({member}) => {
+
   const [books, setBooks] = useState([]);
   const [selectedBook, setSelectedBook] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -73,6 +76,7 @@ const Books = () => {
             <BookCard
               key={book.book_id}
               book={book}
+              member={member}
               onClick={() => setSelectedBook(book)}
             />
           ))
@@ -80,7 +84,7 @@ const Books = () => {
       </div>
 
       {selectedBook && (
-        <BookDetails book={selectedBook} onClose={() => setSelectedBook(null)} />
+        <BookDetails book={selectedBook} member={member} onClose={() => setSelectedBook(null)} />
       )}
     </div>
   );
