@@ -12,7 +12,7 @@ const BookDetails = ({ book, onClose }) => {
   --------------------------------------------------------- */
   const handleBorrow = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/books/borrow", {
+      const res = await fetch("http://localhost:5000/routes/user/borrow", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ bookId: book.id }),
@@ -46,28 +46,29 @@ const BookDetails = ({ book, onClose }) => {
 
         <p><strong>ISBN:</strong> {book.isbn}</p>
         <p><strong>Genre:</strong> {book.genre}</p>
-        <p><strong>Publication Year:</strong> {book.year}</p>
+        <p><strong>Language:</strong> {book.language}</p>
+        <p><strong>Publication Year:</strong> {book.publication_year}</p>
         <p><strong>Author(s):</strong> {book.authors}</p>
-        <p><strong>Publisher:</strong> {book.publisher}</p>
-        <p><strong>Copies:</strong> {book.copies}</p>
+        <p><strong>Publisher:</strong> {book.publisher_name}</p>
+        <p><strong>Copies:</strong> {book.copy_count}</p>
 
         {/* Availability status */}
         <p>
           <strong>Status:</strong>{" "}
-          <span className={book.copies > 0 ? "available" : "not-available"}>
-            {book.copies > 0 ? "Available" : "Not Available"}
+          <span className={book.copy_count > 0 ? "available" : "not-available"}>
+            {book.copy_count > 0 ? "Available" : "Not Available"}
           </span>
         </p>
 
         {/* Borrow button only if copies are available */}
-        {book.copies > 0 && (
+        {book.copy_count > 0 && (
           <button className="borrow-btn" onClick={handleBorrow}>
             Borrow
           </button>
         )}
 
         {/* If no copies, no request button anymore */}
-        {book.copies === 0 && (
+        {book.copy_count === 0 && (
           <p style={{ color: "#777", marginTop: "10px" }}>
             No copies available to borrow.
           </p>

@@ -14,7 +14,7 @@ app.use("/auth", authRouter);
 const dashboardRouter = require("./routes/dashboard");
 app.use("/dashboard", dashboardRouter);
 
-const booksRouter = require("./routes/book");
+const booksRouter = require("./routes/books");
 app.use("/books", booksRouter);
 
 // const loansRouter = require("./routes/loans");

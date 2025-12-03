@@ -4,6 +4,7 @@ import Login from "./Login";
 import Register from "./Register";
 import Profile from "./Profile/Profile";
 import HomePage from "./HomePage/HomePage";
+import Admin from "./Admin/Admin";
 function App() {
   return (
     <Router>
@@ -12,6 +13,7 @@ function App() {
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/admin" element={<Admin />} />
       </Routes>
     </Router>
   );

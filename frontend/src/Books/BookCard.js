@@ -1,24 +1,31 @@
 import React from "react";
 
 const BookCard = ({ book, onClick }) => {
-  return (
-    // Entire card is clickable → triggers onClick (opens details)
-    <div className="book-card" onClick={onClick}>
+  // Build OpenLibrary cover URL
+  const coverUrl = book.isbn
+    ? `https://covers.openlibrary.org/b/isbn/${book.isbn}-L.jpg`
+    : null;
 
+  return (
+    <div className="book-card" onClick={onClick}>
+      
       {/* ------------------------ BOOK IMAGE ------------------------ */}
-      {book.image ? (
+      {coverUrl ? (
         <img
-          src={book.image}
+          src={coverUrl}
           alt={book.title}
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.style.display = "none"; // hide broken image
+          }}
           style={{
             width: "100%",
             height: "200px",
             objectFit: "cover",
-            borderRadius: "5px"
+            borderRadius: "5px",
           }}
         />
       ) : (
-        // Placeholder when no image exists
         <div
           style={{
             height: "200px",
@@ -26,7 +33,7 @@ const BookCard = ({ book, onClick }) => {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            borderRadius: "5px"
+            borderRadius: "5px",
           }}
         >
           No Image
@@ -41,14 +48,13 @@ const BookCard = ({ book, onClick }) => {
       </p>
 
       <p>
-        <strong>Year:</strong> {book.year}
+        <strong>Year:</strong> {book.publication_year}
       </p>
 
       {/* ------------------------ AVAILABILITY BADGE ------------------------ */}
-      <span className={book.copies > 0 ? "available" : "not-available"}>
-        {book.copies > 0 ? "Available" : "Unavailable"}
+      <span className={book.copy_count > 0 ? "available" : "not-available"}>
+        {book.copy_count > 0 ? "Available" : "Unavailable"}
       </span>
-
     </div>
   );
 };

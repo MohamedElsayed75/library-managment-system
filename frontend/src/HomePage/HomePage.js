@@ -5,7 +5,7 @@ import "./HomePage.css";
 
 const HomePage = () => {
   const navigate = useNavigate();
-    const [member, setMember] = useState(null); // { member_id, is_admin, name}
+  const [member, setMember] = useState(null); // { member_id, is_admin, name}
 
   // ------------------- AUTHENTICATION CHECK -------------------
   useEffect(() => {

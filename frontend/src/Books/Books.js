@@ -1,117 +1,77 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import BookCard from "./BookCard";
 import BookDetails from "./BookDetails";
 import "./Books.css";
 
 const Books = () => {
-
-  // Books loaded from backend
   const [books, setBooks] = useState([]);
-
-  // Book selected for viewing details
   const [selectedBook, setSelectedBook] = useState(null);
-
-  // Search field input (changes immediately)
   const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  // Debounced search value (updates after user stops typing)
-  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const fetchBooks = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token");
 
-  /* ----------------------------------------------------------
-     1. LOAD BOOKS FROM BACKEND
-     ---------------------------------------------------------- */
-  useEffect(() => {
-    const fetchBooks = async () => {
-      try {
-        // Placeholder API call — replace with your backend URL
-        const res = await fetch("http://localhost:5000/api/books");
+      const res = await fetch(
+        `http://localhost:5000/books?search=${searchQuery}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
-        const data = await res.json();
+      const data = await res.json();
 
-        setBooks(data); // store data from backend
-
-      } catch (err) {
-        console.error("Failed to load books:", err);
+      if (data.success) {
+        setBooks(data.books);
+      } else {
+        setBooks([]);
       }
-    };
+    } catch (err) {
+      console.error("Failed to fetch books", err);
+      setBooks([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  // Load all books on page load
+  useEffect(() => {
     fetchBooks();
   }, []);
 
-  /* ----------------------------------------------------------
-     2. SEARCH DEBOUNCE (waits 500ms after typing)
-     ---------------------------------------------------------- */
+  // Auto-search when user types (debounced)
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedQuery(searchQuery);
-    }, 500);
-
-    return () => clearTimeout(timer);
+    const delay = setTimeout(fetchBooks, 500);
+    return () => clearTimeout(delay);
   }, [searchQuery]);
 
-  /* ----------------------------------------------------------
-     3. FILTER BOOKS BASED ON SEARCH
-     ---------------------------------------------------------- */
-  const filteredBooks = books.filter((book) =>
-    book.title.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
-    book.authors.toLowerCase().includes(debouncedQuery.toLowerCase())
-  );
-
-  const isTyping = searchQuery !== debouncedQuery;
-
-  /* ----------------------------------------------------------
-     4. RENDER UI
-     ---------------------------------------------------------- */
   return (
     <div className="books-wrapper">
       <h2 className="books-title">Library Books</h2>
 
-      {/* ------------------------ SEARCH BAR ------------------------ */}
       <div className="search-container">
-
         <input
           type="text"
           className="search-input"
-          placeholder="Search by title or author..."
+          placeholder="Search books by title, ISBN, genre, or language..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
-
-        {searchQuery && (
-          <button
-            className="clear-search-btn"
-            onClick={() => {
-              setSearchQuery("");
-              setDebouncedQuery("");
-            }}
-          >
-            X
-          </button>
-        )}
       </div>
 
-      {/* ------------------------ BOOK GRID ------------------------ */}
       <div className="books-grid">
-
-        {/* Backend returned no books */}
-        {books.length === 0 ? (
-          <p className="loading-text">Loading books...</p>
-
-        /* Waiting for debounce while typing */
-        ) : isTyping ? (
-          <p className="loading-text">Searching...</p>
-
-        /* No matches */
-        ) : filteredBooks.length === 0 ? (
+        {loading ? (
+          <p className="loading-text">Loading library catalog...</p>
+        ) : books.length === 0 ? (
           <div className="no-results">
-            <p>No books found matching "<strong>{debouncedQuery}</strong>"</p>
+            <p>No books found matching your search.</p>
           </div>
-
-        /* Show filtered books */
         ) : (
-          filteredBooks.map((book) => (
+          books.map((book) => (
             <BookCard
-              key={book.id}
+              key={book.book_id}
               book={book}
               onClick={() => setSelectedBook(book)}
             />
@@ -119,12 +79,8 @@ const Books = () => {
         )}
       </div>
 
-      {/* ------------------------ BOOK DETAILS MODAL ------------------------ */}
       {selectedBook && (
-        <BookDetails
-          book={selectedBook}
-          onClose={() => setSelectedBook(null)}
-        />
+        <BookDetails book={selectedBook} onClose={() => setSelectedBook(null)} />
       )}
     </div>
   );
