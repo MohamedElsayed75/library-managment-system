@@ -21,13 +21,16 @@ function Login() {
     console.log("Login with:", loginData); 
     
     try{
-      console.log("Request to:", `${API_URL}/login`);
       const res = await axios.post(`${API_URL}/login`, loginData);
+      const user = res.data.user;
 
-      console.log("Response received:", res.data); 
       alert(res.data.message);
-      navigate("/HomePage");
-    } catch(err){
+      if (user.is_admin === 1){
+        alert("Redirecting to Admin Page.");
+        navigate("/Admin");}
+      else{
+      navigate("/HomePage");}
+      } catch(err){
        console.log("Error message:", err.message); // Log message
       alert(err.response?.data?.message || "Login Failed.") 
     }

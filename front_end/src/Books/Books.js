@@ -30,14 +30,26 @@ const Books = () => {
     };
   }, [searchQuery]);
 
-  /* TODO: REMOVE DUMMY DATA GENERATE OWN DUMMY DATA. */
   const fetchAllBooks = async () => {
     try {
       const res = await fetch("http://localhost:5001/api/books");
       const data = await res.json();
-      setBooks(data);
-      }
-     catch (err) {
+      
+      const formatted = data.map(b => ({
+        id: b.book_id,                     
+        isbn: b.isbn,
+        title: b.title,
+        genre: b.genre,
+        year: b.publication_year,           
+        language: b.language,
+        authors: b.authors || "Unknown",     
+        publisher: b.publisher_name || "Unknown",  
+        copies: b.available_copies || 0,             
+        image: b.image_url || null
+      }));
+
+      setBooks(formatted);
+    } catch (err) {
       console.error("Failed to fetch books", err);
     }
   };

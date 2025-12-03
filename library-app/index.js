@@ -46,4 +46,4 @@ app.listen(5001, () => {
 // Added cors
 // added loginlogic and routes to it.
 // Added  bookloigc which works!
-// Added publisherlogic no idea if it is needed.
+// Updated booklogic with joins and also in sql.

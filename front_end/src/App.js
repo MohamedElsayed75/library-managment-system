@@ -24,5 +24,9 @@ function App() {
 // 2. SignUp.js : Connected to the backend fake registration removed.
 // 3. Login.js : Connect to the back end fake registration removed and 
 // changed entry from username to email. TODO: isadmin check.
+// 4. Book.js:  Connected to the back end fake data removed.
+// I have no idea how the search is broken but the category filter works.
+// 5. BookCard.js: Now properly features the shit from backend.
+// 6. BookDetails.js: Now properly features the shit from backend.
 
 export default App;
