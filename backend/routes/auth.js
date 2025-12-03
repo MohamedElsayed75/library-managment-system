@@ -1,12 +1,12 @@
 const express = require("express");
 const router = express.Router();
+const jwt = require('jsonwebtoken');
 
 const {
     getMemberByEmail,
     registerMember,
     logAction
 } = require('../database/database.js');
-
 
 // -------------------------------------------------
 // REGISTER
@@ -60,6 +60,11 @@ router.post('/login', async (req, res) => {
 
         await logAction(member.member_id, "User logged in");
 
+        // JWT AUTH
+        const SECRET = 'my_super_secret_1234567890'; 
+        const token = jwt.sign({ member_id: member.member_id, is_admin: member.is_admin, name: member.name }, SECRET)
+
+
         res.json({
             success: true,
             message: "Login successful",
@@ -68,8 +73,11 @@ router.post('/login', async (req, res) => {
                 name: member.name,
                 email: member.email,
                 is_admin: member.is_admin
-            }
+            },
+            token: token
         });
+
+
 
     } catch (err) {
         console.error("LOGIN ERROR:", err);
