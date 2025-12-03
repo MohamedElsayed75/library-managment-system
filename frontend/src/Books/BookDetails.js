@@ -1,46 +1,57 @@
-import React from "react";
+import React, { useEffect, useState } from "react"; 
+import { Link, useNavigate } from "react-router-dom"; 
+import { verifyTokenRequest } from "../services/api";
 
-const BookDetails = ({ book, onClose }) => {
+const BookDetails = ({ book, member, onClose }) => {
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [isBorrowing, setIsBorrowing] = useState(false);
 
-  /* ---------------------------------------------------------
-     This just sends a request to the backend.
-     Backend will:
-     - check availability
-     - reduce number of copies
-     - create borrow record
-     - return success/error
-  --------------------------------------------------------- */
   const handleBorrow = async () => {
+    setErrorMessage("");
+    setSuccessMessage("");
+    setIsBorrowing(true);
+
     try {
-      const res = await fetch("http://localhost:5000/routes/user/borrow", {
+      const res = await fetch("http://localhost:5000/user/borrow", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bookId: book.id }),
+        body: JSON.stringify({ 
+          book_id: book.book_id,
+          member_id: member.member_id
+         }), 
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.message || "Could not borrow book.");
+        setErrorMessage(data.message || "Could not borrow book.");
+        setIsBorrowing(false);
         return;
       }
 
-      alert(`You borrowed: ${book.title}`);
-      onClose();
+      setSuccessMessage(`You borrowed: ${book.title}`);
+      setIsBorrowing(false);
+
+      // Optionally close popup after short delay
+      setTimeout(() => {
+        onClose();
+      }, 1500);
 
     } catch (err) {
       console.error("Borrow request failed:", err);
-      alert("Error: unable to borrow book.");
+      setErrorMessage("Error: unable to borrow book.");
+      setIsBorrowing(false);
     }
   };
-
 
   return (
     <div className="book-details-overlay">
       <div className="book-details-box">
-
         {/* Close popup */}
-        <button className="close-btn" onClick={onClose}>X</button>
+        <button className="close-btn" onClick={onClose}>
+          X
+        </button>
 
         <h2>{book.title}</h2>
 
@@ -60,20 +71,33 @@ const BookDetails = ({ book, onClose }) => {
           </span>
         </p>
 
+        {/* Error message */}
+        {errorMessage && (
+          <p style={{ color: "red", marginTop: "10px" }}>{errorMessage}</p>
+        )}
+
+        {/* Success message */}
+        {successMessage && (
+          <p style={{ color: "green", marginTop: "10px" }}>{successMessage}</p>
+        )}
+
         {/* Borrow button only if copies are available */}
         {book.copy_count > 0 && (
-          <button className="borrow-btn" onClick={handleBorrow}>
-            Borrow
+          <button
+            className="borrow-btn"
+            onClick={handleBorrow}
+            disabled={isBorrowing}
+          >
+            {isBorrowing ? "Borrowing..." : "Borrow"}
           </button>
         )}
 
-        {/* If no copies, no request button anymore */}
+        {/* If no copies */}
         {book.copy_count === 0 && (
           <p style={{ color: "#777", marginTop: "10px" }}>
             No copies available to borrow.
           </p>
         )}
-
       </div>
     </div>
   );
