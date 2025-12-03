@@ -64,25 +64,6 @@ exports.registerMember = async function(name, email, password, address) {
     return result.insertId;
 };
 
-exports.updateMember = async function(member_id, data) {
-    const fields = [];
-    const values = [];
-    for (let key in data) {
-        fields.push(`${key} = ?`);
-        values.push(data[key]);
-    }
-    values.push(member_id);
-    const result = await exports.query(`UPDATE members SET ${fields.join(', ')} WHERE member_id = ?`, values);
-    await exports.logAction(member_id, 'Updated member info');
-    return result;
-};
-
-exports.deleteMember = async function(member_id) {
-    const result = await exports.query('DELETE FROM members WHERE member_id = ?', [member_id]);
-    await exports.logAction(member_id, 'Deleted member');
-    return result;
-};
-
 exports.checkMemberExists = async function(member_id) {
     const result = await exports.query('SELECT COUNT(*) AS count FROM members WHERE member_id = ?', [member_id]);
     return result[0].count > 0;
@@ -92,6 +73,27 @@ exports.isAdmin = async function(member_id) {
     const result = await exports.query('SELECT is_admin FROM members WHERE member_id = ?', [member_id]);
     return result[0]?.is_admin === 1;
 };
+
+// Check if member has overdue borrow transactions
+exports.hasOverdueTransactions = async function(member_id) {
+    const rows = await exports.query(
+        `
+        SELECT transaction_id 
+        FROM borrowtransactions
+        WHERE member_id = ?
+          AND (
+                status = 'overdue'
+                OR (status = 'borrowed' AND due_date < CURRENT_DATE())
+              )
+        LIMIT 1
+        `,
+        [member_id]
+    );
+
+    // return true if at least 1 overdue transaction exists
+    return rows.length > 0;
+};
+
 // ------------------------------------------------- 
 // BOOK FUNCTIONALITY 
 // -------------------------------------------------
@@ -212,80 +214,150 @@ exports.createCopy = function(book_id) {};
 // Update copy availability
 exports.updateCopy = function(copy_id, data) {};
 
-// Delete a copy
-exports.deleteCopy = function(copy_id) {};
-
-// Check if a copy is available
-exports.isCopyAvailable = function(copy_id) {};
 
 
-// -------------------------------------------------
-// AUTHOR FUNCTIONALITY
-// -------------------------------------------------
 
-// List all authors
-exports.getAllAuthors = function() {};
-
-// Add a new author
-exports.createAuthor = function(name) {};
-
-// Get authors of a book
-exports.getAuthorsOfBook = function(book_id) {};
-
-// Get books by an author
-exports.getBooksOfAuthor = function(author_id) {};
-
-
-// -------------------------------------------------
-// PUBLISHER FUNCTIONALITY
-// -------------------------------------------------
-
-// List all publishers
-exports.getAllPublishers = function() {};
-
-// Get publisher by ID
-exports.getPublisherById = function(publisher_id) {};
-
-// Add a new publisher
-exports.createPublisher = function(name) {};
-
-// Update publisher name
-exports.updatePublisher = function(publisher_id, name) {};
-
-// Delete a publisher
-exports.deletePublisher = function(publisher_id) {};
-
-// Get books of a publisher
-exports.getBooksByPublisher = function(publisher_id) {};
-
-
-// -------------------------------------------------
+// ------------------------------------------------- 
 // BORROW TRANSACTION FUNCTIONALITY
 // -------------------------------------------------
 
 // List all borrow transactions
-exports.getAllTransactions = function() {};
+exports.getAllTransactions = function() {
+    return exports.query('SELECT * FROM borrowtransactions ORDER BY borrow_date DESC');
+};
 
 // Get transaction by ID
-exports.getTransactionById = function(transaction_id) {};
+exports.getTransactionById = function(transaction_id) {
+    return exports.query(
+        'SELECT * FROM borrowtransactions WHERE transaction_id = ?',
+        [transaction_id]
+    );
+};
 
-// Create a borrow transaction
-exports.createTransaction = function(member_id, copy_id, borrow_date, due_date) {};
+// Create a borrow transaction 
+exports.createTransaction = async function(member_id, book_id) {
+
+    // 1. Find first available copy for this book
+    const copies = await exports.query(
+        `SELECT copy_id FROM bookcopies 
+         WHERE book_id = ? AND availability = TRUE 
+         ORDER BY copy_id ASC 
+         LIMIT 1`,
+        [book_id]
+    );
+
+    if (copies.length === 0) {
+        return { error: "No available copies for this book." };
+    }
+
+    const copy_id = copies[0].copy_id;
+
+    // 2. Create transaction with auto dates
+    const result = await exports.query(
+        `INSERT INTO borrowtransactions 
+            (member_id, copy_id, borrow_date, due_date, status)
+         VALUES (
+            ?, 
+            ?, 
+            CURRENT_DATE(),
+            DATE_ADD(CURRENT_DATE(), INTERVAL 7 DAY),
+            'borrowed'
+         )`,
+        [member_id, copy_id]
+    );
+
+    // 3. Mark copy unavailable
+    await exports.query(
+        'UPDATE bookcopies SET availability = FALSE WHERE copy_id = ?',
+        [copy_id]
+    );
+
+    // 4. Log the activity
+    await exports.logAction(
+        member_id, 
+        `Borrowed book_id ${book_id} using copy ${copy_id}`
+    );
+
+    return { success: true };
+};
+
 
 // Return a borrowed copy
-exports.returnTransaction = function(transaction_id, returned_date) {};
+exports.returnTransaction = async function(transaction_id, returned_date) {
+    // Get transaction to identify member and copy
+    const transaction = await exports.getTransactionById(transaction_id);
+    if (!transaction.length) return null;
+
+    const { member_id, copy_id } = transaction[0];
+
+    // Update transaction record
+    await exports.query(
+        `UPDATE borrowtransactions 
+         SET returned_date = ?, status = 'returned' 
+         WHERE transaction_id = ?`,
+        [returned_date, transaction_id]
+    );
+
+    // Mark the copy available again
+    await exports.query(
+        'UPDATE bookcopies SET availability = TRUE WHERE copy_id = ?',
+        [copy_id]
+    );
+
+    // Log activity
+    await exports.logAction(member_id, `Returned copy ID ${copy_id}`);
+
+    return true;
+};
 
 // Get transactions for a member
-exports.getMemberTransactions = function(member_id) {};
+exports.getMemberTransactions = function(member_id) {
+    return exports.query(
+        'SELECT * FROM borrowtransactions WHERE member_id = ? ORDER BY borrow_date DESC',
+        [member_id]
+    );
+};
 
 // List overdue transactions
-exports.getOverdueTransactions = function() {};
+exports.getOverdueTransactions = function() {
+    return exports.query(
+        `SELECT * FROM borrowtransactions 
+         WHERE status = 'overdue'`
+    );
+};
 
 // Check if a copy is currently borrowed
-exports.isBookBorrowed = function(copy_id) {};
+exports.isBookBorrowed = async function(copy_id) {
+    const rows = await exports.query(
+        `SELECT * FROM borrowtransactions 
+         WHERE copy_id = ? AND status = 'borrowed'`,
+        [copy_id]
+    );
+    return rows.length > 0; // true if currently borrowed
+};
 
-// Update transaction status
-exports.updateTransactionStatus = function(transaction_id, status) {};
+// Update transaction status (borrowed, returned, overdue)
+exports.updateTransactionStatus = async function(transaction_id, status) {
+
+    // Update DB
+    const result = await exports.query(
+        `UPDATE borrowtransactions SET status = ? WHERE transaction_id = ?`,
+        [status, transaction_id]
+    );
+
+    // Log action (if transaction exists)
+    const tx = await exports.getTransactionById(transaction_id);
+    if (tx.length) {
+        const { member_id, copy_id } = tx[0];
+        await exports.logAction(
+            member_id, 
+            `Transaction ${transaction_id} status updated to ${status} (Copy ID ${copy_id})`
+        );
+    }
+
+    return result;
+};
+
 
 
 // -------------------------------------------------
