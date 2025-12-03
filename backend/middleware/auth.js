@@ -3,7 +3,7 @@ const SECRET = 'my_super_secret_1234567890';
 
 
 function authenticateToken(req, res, next) {
-  const authHeader = req.headers['Authorization'];
+  const authHeader = req.headers["authorization"];
   const token = authHeader?.split(' ')[1];
 
   if (!token) {
@@ -16,7 +16,6 @@ function authenticateToken(req, res, next) {
     }
 
     req.user = user; // has member_id, is_admin, name
-    console.log(user);
     next();
   });
 }

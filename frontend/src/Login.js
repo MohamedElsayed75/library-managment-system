@@ -6,7 +6,10 @@ import { Link, useLocation } from "react-router-dom";
 function Login() {
   const navigate = useNavigate();
   const loc = useLocation(); // renamed from 'location' to 'loc'
-  const message = loc.state?.message; // safely read message from location state
+  const message = loc.state?.message; 
+  //explanation: 
+  //loc.state contains the message sent from the Register component
+  //loc.state.message is the message sent from the Register component
 
   // Local state for input fields
   const [email, setEmail] = useState("");
@@ -43,8 +46,8 @@ function Login() {
         return;
       }
 
-      // On success, you could save JWT / session in localStorage or context
-      localStorage.setItem("token", data.token); // store token for authenticated requests
+      // On success, save JWT in localStorage
+      localStorage.setItem("token", data.token);
 
       // Navigate to HomePage after successful login
       navigate("/HomePage");

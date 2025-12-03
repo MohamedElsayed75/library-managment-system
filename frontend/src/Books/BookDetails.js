@@ -3,8 +3,6 @@ import React from "react";
 const BookDetails = ({ book, onClose }) => {
 
   /* ---------------------------------------------------------
-     HANDLE BORROW (Frontend → Backend)
-     ---------------------------------------------------------
      This just sends a request to the backend.
      Backend will:
      - check availability
@@ -36,9 +34,7 @@ const BookDetails = ({ book, onClose }) => {
     }
   };
 
-  /* ---------------------------------------------------------
-     UI ONLY — No business logic, no localStorage
-  --------------------------------------------------------- */
+
   return (
     <div className="book-details-overlay">
       <div className="book-details-box">
