@@ -13,58 +13,58 @@ const dbConfig = {
     queueLimit: 0
 };
 
-const pool = mysql.createPool(dbConfig);
+exports.pool = mysql.createPool(dbConfig);
 
 ////// -----------------------------------------------------------------------------
 // QUERY HELPER
 ////// -----------------------------------------------------------------------------
-async function query(sql, params = []) {
-    const [rows] = await pool.execute(sql, params);
+exports.query = async function(sql, params = []) {
+    const [rows] = await exports.pool.execute(sql, params);
     return rows;
-}
+};
 
 ////// -----------------------------------------------------------------------------
 // ACTIVITY LOGS FUNCTIONALITY
 ////// -----------------------------------------------------------------------------
-async function getAllLogs() {
-    return query('SELECT * FROM activitylogs ORDER BY timestamp DESC');
-}
+exports.getAllLogs = async function() {
+    return exports.query('SELECT * FROM activitylogs ORDER BY timestamp DESC');
+};
 
-async function getLogsByMember(member_id) {
-    return query('SELECT * FROM activitylogs WHERE member_id = ? ORDER BY timestamp DESC', [member_id]);
-}
+exports.getLogsByMember = async function(member_id) {
+    return exports.query('SELECT * FROM activitylogs WHERE member_id = ? ORDER BY timestamp DESC', [member_id]);
+};
 
-async function logAction(member_id, action) {
-    return query('INSERT INTO activitylogs (member_id, action) VALUES (?, ?)', [member_id, action]);
-}
+exports.logAction = async function(member_id, action) {
+    return exports.query('INSERT INTO activitylogs (member_id, action) VALUES (?, ?)', [member_id, action]);
+};
 
 ////// -----------------------------------------------------------------------------
 // MEMBER FUNCTIONALITY
 ////// -----------------------------------------------------------------------------
-async function getAllMembers() {
-    return query('SELECT member_id, name, email, address, membership_date, is_admin FROM members');
-}
+exports.getAllMembers = async function() {
+    return exports.query('SELECT member_id, name, email, address, membership_date, is_admin FROM members');
+};
 
-async function getMemberById(member_id) {
-    const result = await query('SELECT member_id, name, email, address, membership_date, is_admin FROM members WHERE member_id = ?', [member_id]);
+exports.getMemberById = async function(member_id) {
+    const result = await exports.query('SELECT member_id, name, email, address, membership_date, is_admin FROM members WHERE member_id = ?', [member_id]);
     return result[0] || null;
-}
+};
 
-async function getMemberByEmail(email) {
-    const result = await query('SELECT * FROM members WHERE email = ?', [email]);
+exports.getMemberByEmail = async function(email) {
+    const result = await exports.query('SELECT * FROM members WHERE email = ?', [email]);
     return result[0] || null;
-}
+};
 
-async function registerMember(name, email, password, address) {
-    const result = await query(
+exports.registerMember = async function(name, email, password, address) {
+    const result = await exports.query(
         'INSERT INTO members (name, email, password, address, membership_date) VALUES (?, ?, ?, ?, CURDATE())',
         [name, email, password, address]
     );
-    await logAction(result.insertId, 'Registered new member');
+    await exports.logAction(result.insertId, 'Registered new member');
     return result.insertId;
-}
+};
 
-async function updateMember(member_id, data) {
+exports.updateMember = async function(member_id, data) {
     const fields = [];
     const values = [];
     for (let key in data) {
@@ -72,240 +72,316 @@ async function updateMember(member_id, data) {
         values.push(data[key]);
     }
     values.push(member_id);
-    const result = await query(`UPDATE members SET ${fields.join(', ')} WHERE member_id = ?`, values);
-    await logAction(member_id, 'Updated member info');
+    const result = await exports.query(`UPDATE members SET ${fields.join(', ')} WHERE member_id = ?`, values);
+    await exports.logAction(member_id, 'Updated member info');
     return result;
-}
+};
 
-async function deleteMember(member_id) {
-    const result = await query('DELETE FROM members WHERE member_id = ?', [member_id]);
-    await logAction(member_id, 'Deleted member');
+exports.deleteMember = async function(member_id) {
+    const result = await exports.query('DELETE FROM members WHERE member_id = ?', [member_id]);
+    await exports.logAction(member_id, 'Deleted member');
     return result;
-}
+};
 
-async function checkMemberExists(member_id) {
-    const result = await query('SELECT COUNT(*) AS count FROM members WHERE member_id = ?', [member_id]);
+exports.checkMemberExists = async function(member_id) {
+    const result = await exports.query('SELECT COUNT(*) AS count FROM members WHERE member_id = ?', [member_id]);
     return result[0].count > 0;
-}
+};
 
-async function isAdmin(member_id) {
-    const result = await query('SELECT is_admin FROM members WHERE member_id = ?', [member_id]);
+exports.isAdmin = async function(member_id) {
+    const result = await exports.query('SELECT is_admin FROM members WHERE member_id = ?', [member_id]);
     return result[0]?.is_admin === 1;
-}
+};
+// ------------------------------------------------- 
+// BOOK FUNCTIONALITY 
+// -------------------------------------------------
 
-////// -----------------------------------------------------------------------------
-// EXPORT EVERYTHING
-////// -----------------------------------------------------------------------------
-module.exports = {
-    pool,
-    query,
-    getAllLogs,
-    getLogsByMember,
-    logAction,
-    getAllMembers,
-    getMemberById,
-    getMemberByEmail,
-    registerMember,
-    updateMember,
-    deleteMember,
-    checkMemberExists,
-    isAdmin
+// List all books (with publisher name)
+exports.getAllBooks = async function(member_id = null) {
+    const sql = `
+        SELECT b.*, p.name AS publisher_name
+        FROM books b
+        LEFT JOIN publishers p ON b.publisher_id = p.publisher_id
+    `;
+    const books = await exports.query(sql);
+
+    if (member_id) {
+        await exports.logAction(member_id, 'Viewed all books');
+    }
+
+    return books;
+};
+
+// List all books filtered by genre
+exports.getAllBooksByGenre = async function(genre = null, member_id = null) {
+    let sql = `
+        SELECT b.*, p.name AS publisher_name
+        FROM books b
+        LEFT JOIN publishers p ON b.publisher_id = p.publisher_id
+        WHERE 1=1
+    `;
+    const params = [];
+
+    if (genre) {
+        sql += ' AND b.genre = ?';
+        params.push(genre);
+    }
+
+    const books = await exports.query(sql, params);
+
+    if (member_id) {
+        await exports.logAction(member_id, `Viewed books with genre: ${genre}`);
+    }
+
+    return books;
 };
 
 
+// Get book details by ID (including publisher and authors)
+exports.getBookById = async function(book_id, member_id = null) {
+    const sql = `
+        SELECT b.*, p.name AS publisher_name,
+               GROUP_CONCAT(a.name SEPARATOR ', ') AS authors
+        FROM books b
+        LEFT JOIN publishers p ON b.publisher_id = p.publisher_id
+        LEFT JOIN bookauthor ba ON b.book_id = ba.book_id
+        LEFT JOIN author a ON ba.author_id = a.author_id
+        WHERE b.book_id = ?
+        GROUP BY b.book_id
+    `;
+    const rows = await exports.query(sql, [book_id]);
 
-// -------------------------------------------------
-//              BOOK FUNCTIONALITY
-// -------------------------------------------------
-// List all books
-function getAllBooks() {}
+    if (member_id) {
+        await exports.logAction(member_id, `Viewed details for book ID ${book_id}`);
+    }
 
-// List all books with  filters
-function getAllBooksByFilters(filters) {}
-
-// Get book details by ID (with publisher info)
-function getBookById(book_id) {}
+    return rows[0] || null;
+};
 
 // Add a new book
-function createBook(data) {}
+exports.createBook = async function(data, member_id) {
+    const { publisher_id, isbn, title, genre, language, publication_year, author_ids = [] } = data;
 
-// Update book details
-function updateBook(book_id, data) {}
+    const sql = `
+        INSERT INTO books (publisher_id, isbn, title, genre, language, publication_year)
+        VALUES (?, ?, ?, ?, ?, ?)
+    `;
+    const result = await exports.query(sql, [publisher_id, isbn, title, genre, language, publication_year]);
+    const book_id = result.insertId;
+
+    // Link authors
+    if (author_ids.length > 0) {
+        const values = author_ids.map(author_id => [book_id, author_id]);
+        const authorSql = 'INSERT INTO bookauthor (book_id, author_id) VALUES ?';
+        await exports.pool.query(authorSql, [values]);
+    }
+
+    // Log activity
+    if (member_id) {
+        await exports.logAction(member_id, `Created new book: ${title} (ID: ${book_id})`);
+    }
+
+    return book_id;
+};
+
 
 // Delete a book
-function deleteBook(book_id) {}
+exports.deleteBook = async function(book_id, member_id) {
+    await exports.query('DELETE FROM bookauthor WHERE book_id = ?', [book_id]);
+    await exports.query('DELETE FROM bookcopies WHERE book_id = ?', [book_id]);
+    await exports.query('DELETE FROM books WHERE book_id = ?', [book_id]);
 
-// Get books by author
-function getBooksByAuthor(author_id) {}
+    if (member_id) {
+        await exports.logAction(member_id, `Deleted book ID ${book_id}`);
+    }
 
-// Get books by publisher
-function getBooksByPublisher(publisher_id) {}
+    return true;
+};
 
 // Search books by title, ISBN, genre, or language
-function searchBooks(term) {}
+exports.searchBooks = async function(term, member_id = null) {
+    const likeTerm = `%${term}%`;
+    const sql = `
+        SELECT b.*, p.name AS publisher_name
+        FROM books b
+        LEFT JOIN publishers p ON b.publisher_id = p.publisher_id
+        WHERE b.title LIKE ? OR b.isbn LIKE ? OR b.genre LIKE ? OR b.language LIKE ?
+    `;
+    const books = await exports.query(sql, [likeTerm, likeTerm, likeTerm, likeTerm]);
 
+    if (member_id) {
+        await exports.logAction(member_id, `Searched books with term: "${term}"`);
+    }
+
+    return books;
+};
 
 
 // -------------------------------------------------
-//            BOOK COPIES FUNCTIONALITY
+// BOOK COPIES FUNCTIONALITY
 // -------------------------------------------------
+
 // Add a new copy for a book
-function createCopy(book_id) {}
+exports.createCopy = function(book_id) {};
 
 // Update copy availability
-function updateCopy(copy_id, data) {}
+exports.updateCopy = function(copy_id, data) {};
 
 // Delete a copy
-function deleteCopy(copy_id) {}
+exports.deleteCopy = function(copy_id) {};
 
 // Check if a copy is available
-function isCopyAvailable(copy_id) {}
+exports.isCopyAvailable = function(copy_id) {};
 
 
 // -------------------------------------------------
-//              AUTHOR FUNCTIONALITY
+// AUTHOR FUNCTIONALITY
 // -------------------------------------------------
+
 // List all authors
-function getAllAuthors() {}
+exports.getAllAuthors = function() {};
 
 // Add a new author
-function createAuthor(name) {}
+exports.createAuthor = function(name) {};
 
 // Get authors of a book
-function getAuthorsOfBook(book_id) {}
+exports.getAuthorsOfBook = function(book_id) {};
 
 // Get books by an author
-function getBooksOfAuthor(author_id) {}
+exports.getBooksOfAuthor = function(author_id) {};
 
 
 // -------------------------------------------------
-//             PUBLISHER FUNCTIONALITY
+// PUBLISHER FUNCTIONALITY
 // -------------------------------------------------
+
 // List all publishers
-function getAllPublishers() {}
+exports.getAllPublishers = function() {};
 
 // Get publisher by ID
-function getPublisherById(publisher_id) {}
+exports.getPublisherById = function(publisher_id) {};
 
 // Add a new publisher
-function createPublisher(name) {}
+exports.createPublisher = function(name) {};
 
 // Update publisher name
-function updatePublisher(publisher_id, name) {}
+exports.updatePublisher = function(publisher_id, name) {};
 
 // Delete a publisher
-function deletePublisher(publisher_id) {}
+exports.deletePublisher = function(publisher_id) {};
 
 // Get books of a publisher
-function getBooksByPublisher(publisher_id) {}
+exports.getBooksByPublisher = function(publisher_id) {};
 
 
 // -------------------------------------------------
-//        BORROW TRANSACTION FUNCTIONALITY
+// BORROW TRANSACTION FUNCTIONALITY
 // -------------------------------------------------
+
 // List all borrow transactions
-function getAllTransactions() {}
+exports.getAllTransactions = function() {};
 
 // Get transaction by ID
-function getTransactionById(transaction_id) {}
+exports.getTransactionById = function(transaction_id) {};
 
 // Create a borrow transaction
-function createTransaction(member_id, copy_id, borrow_date, due_date) {}
+exports.createTransaction = function(member_id, copy_id, borrow_date, due_date) {};
 
 // Return a borrowed copy
-function returnTransaction(transaction_id, returned_date) {}
+exports.returnTransaction = function(transaction_id, returned_date) {};
 
 // Get transactions for a member
-function getMemberTransactions(member_id) {}
+exports.getMemberTransactions = function(member_id) {};
 
 // List overdue transactions
-function getOverdueTransactions() {}
+exports.getOverdueTransactions = function() {};
 
 // Check if a copy is currently borrowed
-function isBookBorrowed(copy_id) {}
+exports.isBookBorrowed = function(copy_id) {};
 
 // Update transaction status
-function updateTransactionStatus(transaction_id, status) {}
+exports.updateTransactionStatus = function(transaction_id, status) {};
 
 
 // -------------------------------------------------
-//            RESERVATION FUNCTIONALITY
+// RESERVATION FUNCTIONALITY
 // -------------------------------------------------
+
 // List all reservations
-function getAllReservations() {}
+exports.getAllReservations = function() {};
 
 // Get reservation by ID
-function getReservationById(reservation_id) {}
+exports.getReservationById = function(reservation_id) {};
 
 // Get reservations of a member
-function getMemberReservations(member_id) {}
+exports.getMemberReservations = function(member_id) {};
 
 // Get reservations for a book
-function getBookReservations(book_id) {}
+exports.getBookReservations = function(book_id) {};
 
 // Create a new reservation
-function createReservation(member_id, book_id, reservation_date) {}
+exports.createReservation = function(member_id, book_id, reservation_date) {};
 
 // Cancel a reservation
-function deleteReservation(reservation_id) {}
+exports.deleteReservation = function(reservation_id) {};
 
 // Check if a book is currently reserved
-function isBookReserved(book_id) {}
+exports.isBookReserved = function(book_id) {};
 
 
 // -------------------------------------------------
-//              FINES FUNCTIONALITY
+// FINES FUNCTIONALITY
 // -------------------------------------------------
+
 // List all fines
-function getAllFines() {}
+exports.getAllFines = function() {};
 
 // Get fine by ID
-function getFineById(fine_id) {}
+exports.getFineById = function(fine_id) {};
 
 // Get fines for a member
-function getFinesByMember(member_id) {}
+exports.getFinesByMember = function(member_id) {};
 
 // Create a new fine
-function createFine(transaction_id, amount, date_issued) {}
+exports.createFine = function(transaction_id, amount, date_issued) {};
 
 // Pay a fine
-function payFine(fine_id, payment_date) {}
+exports.payFine = function(fine_id, payment_date) {};
 
 // Check if a fine is paid
-function isFinePaid(fine_id) {}
+exports.isFinePaid = function(fine_id) {};
 
 
 // -------------------------------------------------
-//              UTILITY CHECKS FUNCTIONALITY
+// UTILITY CHECKS FUNCTIONALITY
 // -------------------------------------------------
+
 // Validate login (email + password)
-function validateLogin(email, password) {}
+exports.validateLogin = function(email, password) {};
 
 // Check if email exists
-function checkEmailExists(email) {}
+exports.checkEmailExists = function(email) {};
 
 // List books with no available copies
-function getBooksWithNoAvailableCopies() {}
+exports.getBooksWithNoAvailableCopies = function() {};
 
 // Count of books borrowed by a member
-function getMemberBorrowCount(member_id) {}
+exports.getMemberBorrowCount = function(member_id) {};
 
 // Borrow history for a book
-function getBookBorrowHistory(book_id) {}
+exports.getBookBorrowHistory = function(book_id) {};
 
 // Borrow history for a member
-function getMemberBorrowHistory(member_id) {}
+exports.getMemberBorrowHistory = function(member_id) {};
 
 // List books by genre
-function getBooksByGenre(genre) {}
+exports.getBooksByGenre = function(genre) {};
 
 // List books by language
-function getBooksByLanguage(language) {}
+exports.getBooksByLanguage = function(language) {};
 
 // List recently added books
-function getRecentlyAddedBooks(limit) {}
+exports.getRecentlyAddedBooks = function(limit) {};
 
 // List top borrowed books
-function getTopBorrowedBooks(limit) {}
-
-
+exports.getTopBorrowedBooks = function(limit) {};
