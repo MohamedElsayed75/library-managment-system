@@ -17,8 +17,8 @@ app.use("/dashboard", dashboardRouter);
 const booksRouter = require("./routes/books");
 app.use("/books", booksRouter);
 
-// const loansRouter = require("./routes/loans");
-// app.use("/loans", loansRouter);
+const userRouter = require("./routes/user");
+app.use("/user", userRouter);
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
