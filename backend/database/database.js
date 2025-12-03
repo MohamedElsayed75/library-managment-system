@@ -96,66 +96,43 @@ exports.isAdmin = async function(member_id) {
 // BOOK FUNCTIONALITY 
 // -------------------------------------------------
 
-// List all books (with publisher name)
-exports.getAllBooks = async function(member_id = null) {
-    const sql = `
-        SELECT b.*, p.name AS publisher_name
-        FROM books b
-        LEFT JOIN publishers p ON b.publisher_id = p.publisher_id
+// List all books
+exports.getAllBooks = async function () {
+  const sql = `SELECT * FROM view_books_full ORDER BY title ASC;`;
+  return exports.query(sql);
+}
+
+
+// Get book details by ID 
+exports.getBookById = async function (book_id) {
+    // Get book aggregated data (from view)
+    const sqlBook = `
+        SELECT *
+        FROM view_books_full
+        WHERE book_id = ?
+        LIMIT 1;
     `;
-    const books = await exports.query(sql);
 
-    if (member_id) {
-        await exports.logAction(member_id, 'Viewed all books');
-    }
+    const rows = await exports.query(sqlBook, [book_id]);
+    const book = rows[0];
 
-    return books;
-};
+    if (!book) return null;
 
-// List all books filtered by genre
-exports.getAllBooksByGenre = async function(genre = null, member_id = null) {
-    let sql = `
-        SELECT b.*, p.name AS publisher_name
-        FROM books b
-        LEFT JOIN publishers p ON b.publisher_id = p.publisher_id
-        WHERE 1=1
+    // Get list of all copies for this book
+    const sqlCopies = `
+        SELECT 
+            copy_id,
+            availability
+        FROM bookcopies
+        WHERE book_id = ?;
     `;
-    const params = [];
 
-    if (genre) {
-        sql += ' AND b.genre = ?';
-        params.push(genre);
-    }
+    const copies = await exports.query(sqlCopies, [book_id]);
 
-    const books = await exports.query(sql, params);
+    // Attach copies to response
+    book.copies = copies;
 
-    if (member_id) {
-        await exports.logAction(member_id, `Viewed books with genre: ${genre}`);
-    }
-
-    return books;
-};
-
-
-// Get book details by ID (including publisher and authors)
-exports.getBookById = async function(book_id, member_id = null) {
-    const sql = `
-        SELECT b.*, p.name AS publisher_name,
-               GROUP_CONCAT(a.name SEPARATOR ', ') AS authors
-        FROM books b
-        LEFT JOIN publishers p ON b.publisher_id = p.publisher_id
-        LEFT JOIN bookauthor ba ON b.book_id = ba.book_id
-        LEFT JOIN author a ON ba.author_id = a.author_id
-        WHERE b.book_id = ?
-        GROUP BY b.book_id
-    `;
-    const rows = await exports.query(sql, [book_id]);
-
-    if (member_id) {
-        await exports.logAction(member_id, `Viewed details for book ID ${book_id}`);
-    }
-
-    return rows[0] || null;
+    return book;
 };
 
 // Add a new book
@@ -199,23 +176,31 @@ exports.deleteBook = async function(book_id, member_id) {
 };
 
 // Search books by title, ISBN, genre, or language
-exports.searchBooks = async function(term, member_id = null) {
-    const likeTerm = `%${term}%`;
-    const sql = `
-        SELECT b.*, p.name AS publisher_name
-        FROM books b
-        LEFT JOIN publishers p ON b.publisher_id = p.publisher_id
-        WHERE b.title LIKE ? OR b.isbn LIKE ? OR b.genre LIKE ? OR b.language LIKE ?
-    `;
-    const books = await exports.query(sql, [likeTerm, likeTerm, likeTerm, likeTerm]);
+exports.searchBooks = async function (searchTerm) {
+  const sql = `
+    SELECT *
+    FROM view_books_full
+    WHERE 
+      title LIKE CONCAT('%', ?, '%')
+      OR isbn LIKE CONCAT('%', ?, '%')
+      OR genre LIKE CONCAT('%', ?, '%')
+      OR language LIKE CONCAT('%', ?, '%')
+      OR authors LIKE CONCAT('%', ?, '%')
+      OR publisher_name LIKE CONCAT('%', ?, '%')
+    ORDER BY title ASC;
+  `;
 
-    if (member_id) {
-        await exports.logAction(member_id, `Searched books with term: "${term}"`);
-    }
+  const params = [
+    searchTerm,
+    searchTerm,
+    searchTerm,
+    searchTerm,
+    searchTerm,
+    searchTerm
+  ];
 
-    return books;
-};
-
+  return exports.query(sql, params);
+}
 
 // -------------------------------------------------
 // BOOK COPIES FUNCTIONALITY
