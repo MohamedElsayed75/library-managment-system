@@ -6,4 +6,5 @@ const DebtBox = ({ amountOwed }) => {
     </div>
   );
 };
+
 export default DebtBox;
