@@ -1,14 +1,36 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { verifyTokenRequest } from "./services/api";
 import "./Login.css";
 
 function Login() {
   const navigate = useNavigate();
-  const loc = useLocation(); // renamed from 'location' to 'loc'
+  const loc = useLocation();
   const message = loc.state?.message; 
-  //explanation: 
-  //loc.state contains the message sent from the Register component
-  //loc.state.message is the message sent from the Register component
+
+    // ------------------- START AUTHENTICATION CHECK -------------------
+    useEffect(() => {
+      const token = localStorage.getItem("token");
+      if (!token) return; // no token, user stays on login/register
+  
+      async function verifyToken() {
+        try {
+          const data = await verifyTokenRequest(token);
+          
+            // token valid → redirect to homepage
+            if (data.member) {
+              navigate("/homepage");
+            }
+          } catch (err) {
+            // token invalid → clear it & allow user to access login/register
+            console.error("Token verification failed:", err);
+            localStorage.removeItem("token");
+          }
+        }
+  
+      verifyToken();
+    }, [navigate]);
+    // ------------------- END AUTHENTICATION CHECK -------------------
 
   // Local state for input fields
   const [email, setEmail] = useState("");

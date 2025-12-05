@@ -1,9 +1,36 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { verifyTokenRequest } from "./services/api";
 import "./Register.css";
 
 const Register = () => {
   const navigate = useNavigate();
+
+  // ------------------- START AUTHENTICATION CHECK -------------------
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return; // no token, user stays on login/register
+
+    async function verifyToken() {
+      try {
+        const data = await verifyTokenRequest(token);
+        
+          // token valid → redirect to homepage
+          if (data.member) {
+            navigate("/homepage");
+          }
+        } catch (err) {
+          // token invalid → clear it & allow user to access login/register
+          console.error("Token verification failed:", err);
+          localStorage.removeItem("token");
+        }
+      }
+
+    verifyToken();
+  }, [navigate]);
+  // ------------------- END AUTHENTICATION CHECK -------------------
+
+
 
   // Local state for inputs and errors
   const [username, setUsername] = useState("");
