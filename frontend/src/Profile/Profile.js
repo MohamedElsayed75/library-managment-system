@@ -1,117 +1,121 @@
-// src/components/Profile/Profile.js
-
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { verifyTokenRequest } from "../services/api";
+import "./Profile.css";
 import DebtBox from "./DebtBox";
 import BorrowedBooks from "./BorrowedBooks";
 import ReservedBooks from "./ReservedBooks";
-import "./Profile.css";
 
-/**
- * Profile Component
- * -----------------
- * Displays the user's profile page with:
- * - Debt information
- * - Borrowed books
- * - Reserved books
- * 
- * Data is loaded from localStorage and managed via React state.
- */
 const Profile = () => {
-  const [amountOwed, setAmountOwed] = useState(0);           // Total debt amount
-  const [borrowedBooks, setBorrowedBooks] = useState([]);    // List of borrowed books
-  const [reservedBooks, setReservedBooks] = useState([]);    // List of reserved books
+  const navigate = useNavigate();
+  const [member, setMember] = useState(null);
 
-  // Load profile data on component mount
+  const [profileData, setProfileData] = useState({
+    amountOwed: 0,
+    borrowedBooks: [],
+    reservedBooks: []
+  });
+
+  // ---------------------- AUTH CHECK ----------------------
   useEffect(() => {
-    loadProfileData();
-  }, []);
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/");
+      return;
+    }
 
-  /**
-   * Load all profile data
-   */
-  const loadProfileData = async () => {
-    await fetchDebt();
-    await fetchBorrowed();
-    await fetchReserved();
-  };
+    async function verifyToken() {
+      try {
+        const data = await verifyTokenRequest(token);
+        setMember(data.member);
+      } catch (err) {
+        console.error("Token verification failed:", err);
+        localStorage.removeItem("token");
+        navigate("/");
+      }
+    }
 
-  /**
-   * Fetch debt information
-   * Currently sets to 0 (placeholder)
-   */
-  const fetchDebt = async () => {
-    setAmountOwed(0); 
-  };
+    verifyToken();
+  }, [navigate]);
+  console.log(member);
+  // ---------------------- END AUTH CHECK ----------------------
 
-  /**
-   * Fetch borrowed books from localStorage
-   */
-  const fetchBorrowed = async () => {
-    const stored = localStorage.getItem("borrowedBooks");
-    if (stored) {
-      setBorrowedBooks(JSON.parse(stored));
-    } else {
-      setBorrowedBooks([]);
+  // ---------------------- FETCH PROFILE DATA ----------------------
+  const fetchProfileData = async (memberId) => {
+    try {
+      const res = await fetch(`http://localhost:5000/user/profile?memberId=${memberId}`)
+      const data = await res.json();
+
+      setProfileData({
+        amountOwed: data.amountOwed,
+        borrowedBooks: data.borrowedBooks,
+        reservedBooks: data.reservedBooks
+      });
+    } catch (err) {
+      console.error("Error fetching profile data:", err);
     }
   };
 
-  /**
-   * Fetch reserved books from localStorage
-   */
-  const fetchReserved = async () => {
-    const stored = localStorage.getItem("requestedBooks");
-    if (stored) {
-      setReservedBooks(JSON.parse(stored));
-    }
-  };
+useEffect(() => {
+  if (member) {
+    console.log("member found");
+    fetchProfileData(member.member_id);
+  } else {
+    console.log("member not found")
+  }
+}, [member]);
 
-  /**
-   * Clear all borrowed and reserved book data
-   * Updates localStorage and UI state
-   */
-  const handleClearData = () => {
-    localStorage.removeItem("borrowedBooks");
-    localStorage.removeItem("requestedBooks");
-    setBorrowedBooks([]);
-    setReservedBooks([]);
-    alert("All borrowed and requested history has been cleared.");
+  // ---------------------- PAY FINES ----------------------
+  const handlePayFines = async () => {
+    try {
+      const res = await fetch(`http://localhost:5000/user/payfines`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ memberId: member.member_id })
+      });
+
+
+      const data = await res.json();
+      alert(data.message);
+
+      fetchProfileData(member.member_id);
+    } catch (err) {
+      console.error("Error paying fines:", err);
+    }
   };
 
   return (
     <div className="profile-wrapper">
       <h2 className="profile-title">My BookShelf</h2>
 
-      {/* Back button */}
       <button className="back-button" onClick={() => window.history.back()}>
         Back
       </button>
 
-      {/* Clear History button (top right) */}
-      <button 
-        onClick={handleClearData}
-        style={{
-          position: "absolute",
-          top: "50px",
-          right: "50px",
-          padding: "15px 25px",
-          backgroundColor: "#d9534f",
-          color: "white",
-          border: "none",
-          borderRadius: "8px",
-          fontWeight: "bold",
-          fontSize: "18px",
-          cursor: "pointer",
-          boxShadow: "0 4px 6px rgba(0,0,0,0.2)"
-        }}
+      <button
+        className="pay-fines-button"
+        onClick={handlePayFines}
+        disabled={Number(profileData.amountOwed) === 0}
       >
-        Clear History
+        Pay Fines
       </button>
-      
-      {/* Profile sections */}
+
       <div className="profile-sections">
-        <DebtBox amountOwed={amountOwed} />
-        <BorrowedBooks books={borrowedBooks} />
-        <ReservedBooks reserved={reservedBooks} />
+        <DebtBox amountOwed={profileData.amountOwed} />
+
+        <BorrowedBooks
+          borrowedBooks={profileData.borrowedBooks}
+          memberId={member?.member_id}
+          refresh={() => fetchProfileData(member.member_id)}
+        />
+
+        <ReservedBooks
+          reserved={profileData.reservedBooks}
+          memberId={member?.member_id}
+          refresh={() => fetchProfileData(member.member_id)}
+        />
       </div>
     </div>
   );
