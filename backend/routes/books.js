@@ -4,9 +4,7 @@ const router = express.Router();
 const {
   getAllBooks,
   searchBooks,
-  getBookById,
-  createBook,
-  deleteBook
+  getBookById
 } = require("../database/database.js");
 
 const authenticateToken = require("../middleware/auth.js");
