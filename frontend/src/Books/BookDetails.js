@@ -1,8 +1,6 @@
-import React, { useEffect, useState } from "react"; 
-import { Link, useNavigate } from "react-router-dom"; 
-import { verifyTokenRequest } from "../services/api";
+import React, { useState } from "react"; 
 
-const BookDetails = ({ book, member, onClose }) => {
+const BookDetails = ({ book, member, refresh, onClose }) => {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isBorrowing, setIsBorrowing] = useState(false);
@@ -36,8 +34,9 @@ const BookDetails = ({ book, member, onClose }) => {
       // Optionally close popup after short delay
       setTimeout(() => {
         onClose();
-      }, 1500);
+        refresh();
 
+      }, 1500);
     } catch (err) {
       console.error("Borrow request failed:", err);
       setErrorMessage("Error: unable to borrow book.");

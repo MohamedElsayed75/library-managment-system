@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { verifyTokenRequest } from "../services/api";
 import BookCard from "./BookCard";
 import BookDetails from "./BookDetails";
 import "./Books.css";
@@ -84,7 +82,7 @@ const Books = ({member}) => {
       </div>
 
       {selectedBook && (
-        <BookDetails book={selectedBook} member={member} onClose={() => setSelectedBook(null)} />
+        <BookDetails book={selectedBook} member={member} refresh={() => fetchBooks()} onClose={() => setSelectedBook(null)} />
       )}
     </div>
   );

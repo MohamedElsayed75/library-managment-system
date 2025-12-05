@@ -1,7 +1,3 @@
-import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { verifyTokenRequest } from "../services/api";
-
 const BookCard = ({ book, member, onClick }) => {
   // Build OpenLibrary cover URL
   const coverUrl = book.isbn
