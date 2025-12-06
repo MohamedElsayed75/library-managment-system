@@ -3,9 +3,9 @@ const router = express.Router();
 
 const { 
     getAllBooks,
-    deleteBook,
     createBook,
-    createCopy
+    createCopy,
+    deleteAvailableCopy
 } = require("../database/database.js");
 
 router.get("/books", async (req, res) => {
@@ -37,10 +37,11 @@ router.post("/addBook", async (req, res) => {
 });
 
 
-router.post("/addCopy/:book_id", async (req, res) => {
+router.post("/addCopy", async (req, res) => {
     try {
-        const { book_id } = req.params; // use params instead of body
-        await createCopy(book_id);
+        const { book_id, member_id } = req.body;
+
+        await createCopy(book_id, member_id);
         res.json({ success: true, message: "Copy added successfully" });
     } catch (error) {
         console.error(error);
@@ -48,9 +49,29 @@ router.post("/addCopy/:book_id", async (req, res) => {
     }
 });
 
-router.post("/deleteBook", async (req, res) => {
-   
+router.delete("/deleteCopy", async (req, res) => {
+    const { bookId, memberId } = req.body;
+
+    try {
+        const result = await deleteAvailableCopy(bookId, memberId);
+
+        if (!result.success) {
+            return res.status(
+                result.message.includes("No available") ? 404 : 500
+            ).json(result);
+        }
+
+        return res.status(200).json(result);
+
+    } catch (error) {
+        console.error("Route error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Server error deleting copy."
+        });
+    }
 });
+
 
 
 module.exports = router;
