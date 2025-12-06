@@ -320,9 +320,8 @@ exports.createBook = async function(data, member_id) {
         // ----------------------------
         // Log activity
         // ----------------------------
-        if (member_id) {
-            await exports.logAction(member_id, `Created new book: ${title} (ID: ${book_id})`);
-        }
+        await exports.logAction(member_id, `Created new book: ${title} (ID: ${book_id})`);
+        
 
 
 
@@ -333,25 +332,6 @@ exports.createBook = async function(data, member_id) {
         throw err;
     }
 };
-
-
-
-// Delete a book
-exports.deleteBook = async function(book_id, member_id) {
-    // Delete copies first
-    await exports.query('DELETE FROM bookcopies WHERE book_id = ?', [book_id]);
-
-    // Delete the book
-    await exports.query('DELETE FROM books WHERE book_id = ?', [book_id]);
-
-    // Log activity
-    if (member_id) {
-        await exports.logAction(member_id, `Deleted book ID ${book_id}`);
-    }
-
-    return true;
-};
-
 
 // Search books by title, ISBN, genre, or language
 exports.searchBooks = async function(searchTerm) {
@@ -395,12 +375,54 @@ exports.createCopy = async function(book_id, member_id) {
 
     const copy_id = result.insertId;
 
-    if (member_id) {
-        await exports.logAction(member_id, `Added new copy ID ${copy_id} for book ID ${book_id}`);
-    }
+    await exports.logAction(member_id, `Added new copy ID ${copy_id} for book ID ${book_id}`);
 
     return copy_id;
 };
+
+exports.deleteAvailableCopy = async function (bookId, memberId) {
+    try {
+        // 1. Find one available copy
+        const available = await exports.query(
+            `SELECT copy_id 
+             FROM bookcopies 
+             WHERE book_id = ? AND availability = TRUE 
+             LIMIT 1`,
+            [bookId]
+        );
+
+        if (available.length === 0) {
+            return { success: false, message: "No available copies to delete." };
+        }
+
+        const copyId = available[0].copy_id;
+
+        // 2. Delete that specific copy
+        await exports.query(
+            `DELETE FROM bookcopies WHERE copy_id = ?`,
+            [copyId]
+        );
+
+        // 3. Log activity
+        await exports.logAction(memberId, `Deleted copy ID ${copyId} for book ID ${bookId}.`);
+        
+        return {
+            success: true,
+            message: `Copy ${copyId} of book ${bookId} deleted successfully.`,
+            deletedCopyId: copyId
+        };
+
+    } catch (error) {
+        console.error("Error deleting copy:", error);
+        return { success: false, message: "Server error deleting copy." };
+    }
+};
+    
+
+
+
+
+
 
 // ------------------------------------------------- 
 // BORROW TRANSACTION FUNCTIONALITY
