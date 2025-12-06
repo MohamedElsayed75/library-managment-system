@@ -1,7 +1,13 @@
 import React, { useState } from "react";
 import "./Admin.css";
 
-const AdminAddBook = ({ member }) => {  // Receive member as prop
+/////////////////////////////
+// AdminAddBook Component
+/////////////////////////////
+const AdminAddBook = ({ member }) => {
+  /////////////////////////////
+  // Local State
+  /////////////////////////////
   const [newBook, setNewBook] = useState({
     isbn: "",
     title: "",
@@ -13,13 +19,17 @@ const AdminAddBook = ({ member }) => {  // Receive member as prop
   });
   const [message, setMessage] = useState({ text: "", type: "" });
 
-  // Handle form input changes
+  /////////////////////////////
+  // Handle Input Change
+  /////////////////////////////
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewBook({ ...newBook, [name]: value });
   };
 
-  // Handle add book
+  /////////////////////////////
+  // Handle Add Book
+  /////////////////////////////
   const handleAddBook = async (e) => {
     e.preventDefault();
 
@@ -28,14 +38,13 @@ const AdminAddBook = ({ member }) => {  // Receive member as prop
       return;
     }
 
-    // Prepare payload including member_id
     const payload = {
       newBook,
-      member_id: member.member_id // Add member_id here
+      member_id: member.member_id
     };
 
     try {
-    console.log(payload);
+      console.log(payload);
       const res = await fetch("http://localhost:5000/admin/addBook", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -68,11 +77,13 @@ const AdminAddBook = ({ member }) => {  // Receive member as prop
     }
   };
 
+  /////////////////////////////
+  // JSX
+  /////////////////////////////
   return (
     <div className="admin-section">
       <h3>Add New Book</h3>
 
-      {/* Success/Error message */}
       {message.text && (
         <div className={`message ${message.type}`}>
           {message.text}
@@ -107,4 +118,7 @@ const AdminAddBook = ({ member }) => {  // Receive member as prop
   );
 };
 
+/////////////////////////////
+// Export AdminAddBook
+/////////////////////////////
 export default AdminAddBook;

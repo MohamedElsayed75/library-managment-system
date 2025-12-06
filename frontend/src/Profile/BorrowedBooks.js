@@ -1,7 +1,13 @@
 import React from "react";
 
+/////////////////////////////
+// BorrowedBooks Component
+/////////////////////////////
 const BorrowedBooks = ({ borrowedBooks, memberId, refresh }) => {
 
+  /////////////////////////////
+  // Handle Returning a Book
+  /////////////////////////////
   const handleReturn = async (transactionId) => {
     try {
       const res = await fetch(
@@ -20,6 +26,9 @@ const BorrowedBooks = ({ borrowedBooks, memberId, refresh }) => {
     }
   };
 
+  /////////////////////////////
+  // JSX
+  /////////////////////////////
   return (
     <div className="borrowed-box">
       <h2>Borrowed Books</h2>
@@ -46,4 +55,7 @@ const BorrowedBooks = ({ borrowedBooks, memberId, refresh }) => {
   );
 };
 
+/////////////////////////////
+// Export BorrowedBooks
+/////////////////////////////
 export default BorrowedBooks;

@@ -1,10 +1,15 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+
 import Login from "./Login";
 import Register from "./Register";
 import Profile from "./Profile/Profile";
 import HomePage from "./HomePage/HomePage";
 import Admin from "./Admin/Admin";
+
+/////////////////////////////
+// App Component & Routes
+/////////////////////////////
 function App() {
   return (
     <Router>
@@ -19,4 +24,7 @@ function App() {
   );
 }
 
+/////////////////////////////
+// Export App
+/////////////////////////////
 export default App;

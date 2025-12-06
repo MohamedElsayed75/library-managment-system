@@ -1,5 +1,11 @@
+/////////////////////////////
+// ReservedBooks Component
+/////////////////////////////
 const ReservedBooks = ({ reserved, memberId, refresh }) => {
 
+  /////////////////////////////
+  // Handle Cancel Reservation
+  /////////////////////////////
   const handleCancel = async (reserveId) => {
     try {
       const res = await fetch(`/api/members/${memberId}/reserved/${reserveId}/cancel`, {
@@ -14,6 +20,9 @@ const ReservedBooks = ({ reserved, memberId, refresh }) => {
     }
   };
 
+  /////////////////////////////
+  // JSX
+  /////////////////////////////
   return (
     <div className="reserved-box">
       <h2>Reserved Books</h2>
@@ -40,4 +49,7 @@ const ReservedBooks = ({ reserved, memberId, refresh }) => {
   );
 };
 
+/////////////////////////////
+// Export ReservedBooks
+/////////////////////////////
 export default ReservedBooks;

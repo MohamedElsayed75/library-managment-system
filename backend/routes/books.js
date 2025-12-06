@@ -8,20 +8,17 @@ const {
 } = require("../database/database.js");
 const authenticateToken = require("../middleware/auth.js");
 
+/////////////////////////////
+// GET Books (with optional search)
+/////////////////////////////
 router.get("/", authenticateToken, async (req, res) => {
   try {
-    const { search  = "" } = req.query;
+    const { search = "" } = req.query;
     const memberId = req.user.member_id;
-    await checkAndApplyFines(memberId);
-    let books;
 
-    // If there is a search query, use searchBooks
-    if (search ) {
-      books = await searchBooks(search );
-    } else {
-      // Otherwise, fetch all books
-      books = await getAllBooks();
-    }
+    await checkAndApplyFines(memberId);
+
+    const books = search ? await searchBooks(search) : await getAllBooks();
 
     res.json({ success: true, books });
   } catch (error) {
@@ -30,6 +27,7 @@ router.get("/", authenticateToken, async (req, res) => {
   }
 });
 
-
-
+/////////////////////////////
+// Export Router
+/////////////////////////////
 module.exports = router;

@@ -1,8 +1,12 @@
 const mysql = require('mysql2/promise');
 
-////// -----------------------------------------------------------------------------
-// CONFIGURATION
-////// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+// CONFIGURATION & CORE UTILITIES
+// -----------------------------------------------------------------------------
+
+/**
+ * Database connection configuration for the LibraryDB.
+ */
 const dbConfig = {
     host: 'localhost',
     user: 'root',
@@ -13,36 +17,46 @@ const dbConfig = {
     queueLimit: 0
 };
 
+// Create the connection pool and export it
 exports.pool = mysql.createPool(dbConfig);
 
-////// -----------------------------------------------------------------------------
-// QUERY HELPER
-////// -----------------------------------------------------------------------------
+/**
+ * Executes a SQL query against the database pool.
+ * @param {string} sql - The SQL query string.
+ * @param {Array<any>} [params=[]] - An array of parameters for the query.
+ * @returns {Promise<Array<Object>>} - The resulting **rows** (array of plain objects) from the query.
+ */
 exports.query = async function(sql, params = []) {
     const [rows] = await exports.pool.execute(sql, params);
     return rows;
 };
 
-////// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // ACTIVITY LOGS FUNCTIONALITY
-////// -----------------------------------------------------------------------------
-exports.getLogsByMember = async function(member_id) {
-    return exports.query('SELECT * FROM activitylogs WHERE member_id = ? ORDER BY timestamp DESC', [member_id]);
-};
+// -----------------------------------------------------------------------------
 
+/**
+ * Logs an action performed by a member.
+ * @param {number} member_id - The ID of the member performing the action.
+ * @param {string} action - A description of the action.
+ * @returns {Promise<Object>} - The MySQL insert result object (contains `insertId`).
+ */
 exports.logAction = async function(member_id, action) {
     return exports.query('INSERT INTO activitylogs (member_id, action) VALUES (?, ?)', [member_id, action]);
 };
 
-////// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // MEMBER FUNCTIONALITY
-////// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 
-exports.getMemberByEmail = async function(email) {
-    const result = await exports.query('SELECT * FROM members WHERE email = ?', [email]);
-    return result[0] || null;
-};
-
+/**
+ * Registers a new member in the database.
+ * @param {string} name - Member's name.
+ * @param {string} email - Member's email (unique identifier).
+ * @param {string} password - Member's password (hashed in a real application).
+ * @param {string} address - Member's physical address.
+ * @returns {Promise<number>} - The `member_id` of the newly registered member.
+ */
 exports.registerMember = async function(name, email, password, address) {
     const result = await exports.query(
         'INSERT INTO members (name, email, password, address, membership_date) VALUES (?, ?, ?, ?, NOW())',
@@ -52,11 +66,25 @@ exports.registerMember = async function(name, email, password, address) {
     return result.insertId;
 };
 
-// Check if member has overdue borrow transactions
+/**
+ * Retrieves a member's record by their email address.
+ * @param {string} email - The email of the member.
+ * @returns {Promise<{member_id: number, name: string, email: string, ...}|null>} - The member object or null if not found.
+ */
+exports.getMemberByEmail = async function(email) {
+    const result = await exports.query('SELECT * FROM members WHERE email = ?', [email]);
+    return result[0] || null;
+};
+
+/**
+ * Checks if a member has any overdue borrow transactions.
+ * @param {number} member_id - The ID of the member.
+ * @returns {Promise<boolean>} - True if at least one overdue transaction exists, otherwise false.
+ */
 exports.hasOverdueTransactions = async function(member_id) {
     const rows = await exports.query(
         `
-        SELECT transaction_id 
+        SELECT transaction_id
         FROM borrowtransactions
         WHERE member_id = ?
           AND (
@@ -72,9 +100,14 @@ exports.hasOverdueTransactions = async function(member_id) {
     return rows.length > 0;
 };
 
+/**
+ * Retrieves a list of books currently borrowed by a member.
+ * @param {number} memberId - The ID of the member.
+ * @returns {Promise<Array<{member_id: number, transaction_id: number, book_id: number, book_title: string, days_remaining: number}>>} - A list of borrowed books with transaction details.
+ */
 exports.getBorrowedBooksByMember = async function(memberId) {
     const sql = `
-        SELECT 
+        SELECT
             m.member_id,
             bt.transaction_id,
             b.book_id,
@@ -85,15 +118,20 @@ exports.getBorrowedBooksByMember = async function(memberId) {
         JOIN bookcopies bc ON bt.copy_id = bc.copy_id
         JOIN books b ON bc.book_id = b.book_id
         WHERE m.member_id = ?
-        AND bt.status in  ('borrowed', 'overdue');
+        AND bt.status in ('borrowed', 'overdue');
     `;
 
     return await exports.query(sql, [memberId]);
 };
 
+/**
+ * Gathers profile-related data for a member, including fines, borrowed, and reserved books.
+ * @param {number} memberId - The ID of the member.
+ * @returns {Promise<{totalFines: string, borrowedBooks: Array<Object>, reservedBooks: Array<Object>}>} - An object containing total fines (as string), borrowed books, and reserved books.
+ */
 exports.getProfileData = async function(memberId) {
 
-    // Get total fines 
+    // Get total fines
     const fineRows = await exports.query(
         `SELECT COALESCE(SUM(f.amount), 0) AS total_fines
          FROM fines f
@@ -101,14 +139,14 @@ exports.getProfileData = async function(memberId) {
          WHERE bt.member_id = ? AND f.payment_status = 0`,
         [memberId]
     );
-    const totalFines = fineRows[0].total_fines;
+    const totalFines = fineRows[0].total_fines; // Note: SQL returns DECIMAL/SUM as string or number depending on driver settings
 
-    // Get borrowed books 
+    // Get borrowed books
     const borrowedBooks = await exports.getBorrowedBooksByMember(memberId);
 
-    // Get reserved books 
+    // Get reserved books
     const reservedBooks = await exports.query(
-        `SELECT 
+        `SELECT
             r.reservation_id,
             r.reservation_date,
             b.book_id,
@@ -117,114 +155,26 @@ exports.getProfileData = async function(memberId) {
             b.genre,
             b.language,
             b.publication_year
-         FROM reservations r
-         INNER JOIN books b ON r.book_id = b.book_id
-         INNER JOIN author a ON b.author_id = a.author_id
-         WHERE r.member_id = ?`,
+          FROM reservations r
+          INNER JOIN books b ON r.book_id = b.book_id
+          INNER JOIN author a ON b.author_id = a.author_id
+          WHERE r.member_id = ?`,
         [memberId]
     );
 
     return { totalFines, borrowedBooks, reservedBooks };
 };
 
-// Create a borrow transaction 
-exports.createTransaction = async function(member_id, book_id) {
 
-    // 1. Find first available copy for this book
-    const copies = await exports.query(
-        `SELECT copy_id FROM bookcopies 
-         WHERE book_id = ? AND availability = TRUE 
-         ORDER BY copy_id ASC 
-         LIMIT 1`,
-        [book_id]
-    );
-
-    if (copies.length === 0) {
-        return { error: "No available copies for this book." };
-    }
-
-    const copy_id = copies[0].copy_id;
-
-    // 2. Create transaction
-    const result = await exports.query(
-        `INSERT INTO borrowtransactions 
-            (member_id, copy_id, borrow_date, due_date, status)
-        VALUES (
-            ?, 
-            ?, 
-            NOW(),
-            DATE_ADD(NOW(), INTERVAL 1 MINUTE),
-            'borrowed'
-        )`,
-        [member_id, copy_id]
-    );
-// NOW(),
-// DATE_ADD(CURRENT_DATE(), INTERVAL 7 DAY),
-    // 3. Mark copy unavailable
-    await exports.query(
-        'UPDATE bookcopies SET availability = FALSE WHERE copy_id = ?',
-        [copy_id]
-    );
-
-    // 4. Log the activity
-    await exports.logAction(
-        member_id, 
-        `Borrowed book_id ${book_id} using copy ${copy_id}`
-    );
-
-    return { success: true };
-};
-
-// Return a borrowed copy
-exports.returnTransaction = async function(transaction_id) {
-    try {
-        // Get transaction to identify member and copy
-        const transaction = await exports.getTransactionById(transaction_id);
-        if (!transaction.length) {
-            return { success: false, error: `Transaction ID ${transaction_id} not found.` };
-        }
-
-        const { member_id, copy_id } = transaction[0];
-
-        // Mark the copy available again
-        await exports.query(
-            'UPDATE bookcopies SET availability = TRUE WHERE copy_id = ?',
-            [copy_id]
-        );
-
-        // Update transaction record
-        await exports.query(
-            `UPDATE borrowtransactions 
-             SET returned_date = CURRENT_DATE(), status = 'returned' 
-             WHERE transaction_id = ?`,
-            [transaction_id]
-        );
-
-        // Log activity
-        await exports.logAction(member_id, `Returned copy ID ${copy_id}`);
-
-        return { success: true };
-
-    } catch (err) {
-        console.error(`Error returning transaction ID ${transaction_id}:`, err);
-        return { success: false, error: err.message };
-    }
-};
-
-
-
-// ------------------------------------------------- 
+// -----------------------------------------------------------------------------
 // BOOK FUNCTIONALITY 
-// -------------------------------------------------
+// -----------------------------------------------------------------------------
 
-// List all books
-exports.getAllBooks = async function () {
-  const sql = `SELECT * FROM view_books_full ORDER BY title ASC;`;
-  return exports.query(sql);
-}
-
-
-// Get book details by ID 
+/**
+ * Retrieves detailed information for a specific book, including its copies.
+ * @param {number} book_id - The ID of the book.
+ * @returns {Promise<{book_id: number, title: string, author_name: string, publisher_name: string, copies: Array<{copy_id: number, availability: boolean}>}|null>} - The book object with a 'copies' array, or null if not found.
+ */
 exports.getBookById = async function(book_id) {
     // Get book + author + publisher
     const sqlBook = `
@@ -254,7 +204,22 @@ exports.getBookById = async function(book_id) {
     return book;
 };
 
-// Add a new book
+/**
+ * Retrieves a list of all books from the database.
+ * @returns {Promise<Array<{book_id: number, title: string, author_name: string, publisher_name: string, copy_count: number}>>} - List of all books based on `view_books_full`.
+ */
+exports.getAllBooks = async function () {
+    const sql = `SELECT * FROM view_books_full ORDER BY title ASC;`;
+    return exports.query(sql);
+}
+
+/**
+ * Creates a new book record, and inserts the author/publisher if they don't exist.
+ * @param {Object} data - Book details (isbn, title, genre, language, author, year, publisher).
+ * @param {number} member_id - The ID of the member adding the book (for logging).
+ * @returns {Promise<{book_id: number}>} - The ID of the newly created book.
+ * @throws {Error} - If there is a database error during book creation.
+ */
 exports.createBook = async function(data, member_id) {
     const {
         isbn,
@@ -310,8 +275,8 @@ exports.createBook = async function(data, member_id) {
         // ----------------------------
         const bookResult = await exports.query(
             `INSERT INTO books
-                (title, isbn, genre, language, publication_year, author_id, publisher_id)
-             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                 (title, isbn, genre, language, publication_year, author_id, publisher_id)
+               VALUES (?, ?, ?, ?, ?, ?, ?)`,
             [title, isbn, genre, language, year, author_id, publisher_id]
         );
 
@@ -321,8 +286,6 @@ exports.createBook = async function(data, member_id) {
         // Log activity
         // ----------------------------
         await exports.logAction(member_id, `Created new book: ${title} (ID: ${book_id})`);
-        
-
 
 
         return { book_id };
@@ -333,39 +296,47 @@ exports.createBook = async function(data, member_id) {
     }
 };
 
-// Search books by title, ISBN, genre, or language
+/**
+ * Searches books by matching the search term against title, ISBN, genre, language, author, or publisher name.
+ * @param {string} searchTerm - The term to search for.
+ * @returns {Promise<Array<{book_id: number, title: string, author_name: string, publisher_name: string, copy_count: number}>>} - A list of matching books with copy count.
+ */
 exports.searchBooks = async function(searchTerm) {
-  const sql = `
-    SELECT 
-        b.*,
-        a.name AS author_name,
-        p.name AS publisher_name,
-        COUNT(bc.copy_id) AS copy_count
-    FROM books b
-    JOIN author a ON b.author_id = a.author_id
-    LEFT JOIN publishers p ON b.publisher_id = p.publisher_id
-    LEFT JOIN bookcopies bc ON b.book_id = bc.book_id
-    WHERE 
-        b.title LIKE CONCAT('%', ?, '%')
-        OR b.isbn LIKE CONCAT('%', ?, '%')
-        OR b.genre LIKE CONCAT('%', ?, '%')
-        OR b.language LIKE CONCAT('%', ?, '%')
-        OR a.name LIKE CONCAT('%', ?, '%')
-        OR p.name LIKE CONCAT('%', ?, '%')
-    GROUP BY b.book_id
-    ORDER BY b.title ASC;
-  `;
+    const sql = `
+        SELECT
+            b.*,
+            a.name AS author_name,
+            p.name AS publisher_name,
+            COUNT(bc.copy_id) AS copy_count
+        FROM books b
+        JOIN author a ON b.author_id = a.author_id
+        LEFT JOIN publishers p ON b.publisher_id = p.publisher_id
+        LEFT JOIN bookcopies bc ON b.book_id = bc.book_id
+        WHERE
+            b.title LIKE CONCAT('%', ?, '%')
+            OR b.isbn LIKE CONCAT('%', ?, '%')
+            OR b.genre LIKE CONCAT('%', ?, '%')
+            OR b.language LIKE CONCAT('%', ?, '%')
+            OR a.name LIKE CONCAT('%', ?, '%')
+            OR p.name LIKE CONCAT('%', ?, '%')
+        GROUP BY b.book_id
+        ORDER BY b.title ASC;
+    `;
 
-  const params = [searchTerm, searchTerm, searchTerm, searchTerm, searchTerm, searchTerm];
-  return exports.query(sql, params);
+    const params = [searchTerm, searchTerm, searchTerm, searchTerm, searchTerm, searchTerm];
+    return exports.query(sql, params);
 };
 
-
-// -------------------------------------------------
+// -----------------------------------------------------------------------------
 // BOOK COPIES FUNCTIONALITY
-// -------------------------------------------------
+// -----------------------------------------------------------------------------
 
-// Add a new copy for a book
+/**
+ * Adds a new copy record for an existing book.
+ * @param {number} book_id - The ID of the book to add a copy for.
+ * @param {number} member_id - The ID of the member adding the copy (for logging).
+ * @returns {Promise<number>} - The `copy_id` of the newly created copy.
+ */
 exports.createCopy = async function(book_id, member_id) {
     // Insert a new copy for the given book
     const result = await exports.query(
@@ -380,13 +351,19 @@ exports.createCopy = async function(book_id, member_id) {
     return copy_id;
 };
 
+/**
+ * Finds and deletes one available copy of a specified book.
+ * @param {number} bookId - The ID of the book.
+ * @param {number} memberId - The ID of the member performing the deletion (for logging).
+ * @returns {Promise<{success: boolean, message: string, deletedCopyId?: number}>} - Success status, message, and the deleted copy ID if successful.
+ */
 exports.deleteAvailableCopy = async function (bookId, memberId) {
     try {
         // 1. Find one available copy
         const available = await exports.query(
-            `SELECT copy_id 
-             FROM bookcopies 
-             WHERE book_id = ? AND availability = TRUE 
+            `SELECT copy_id
+             FROM bookcopies
+             WHERE book_id = ? AND availability = TRUE
              LIMIT 1`,
             [bookId]
         );
@@ -405,7 +382,7 @@ exports.deleteAvailableCopy = async function (bookId, memberId) {
 
         // 3. Log activity
         await exports.logAction(memberId, `Deleted copy ID ${copyId} for book ID ${bookId}.`);
-        
+
         return {
             success: true,
             message: `Copy ${copyId} of book ${bookId} deleted successfully.`,
@@ -417,17 +394,17 @@ exports.deleteAvailableCopy = async function (bookId, memberId) {
         return { success: false, message: "Server error deleting copy." };
     }
 };
-    
 
 
-
-
-
-
-// ------------------------------------------------- 
+// -----------------------------------------------------------------------------
 // BORROW TRANSACTION FUNCTIONALITY
-// -------------------------------------------------
-// Get transaction by ID
+// -----------------------------------------------------------------------------
+
+/**
+ * Retrieves a borrow transaction record by its ID.
+ * @param {number} transaction_id - The ID of the transaction.
+ * @returns {Promise<Array<{transaction_id: number, member_id: number, copy_id: number, borrow_date: Date, due_date: Date, returned_date: Date|null, status: 'borrowed'|'returned'|'overdue'}>>} - The transaction record(s).
+ */
 exports.getTransactionById = function(transaction_id) {
     return exports.query(
         'SELECT * FROM borrowtransactions WHERE transaction_id = ?',
@@ -435,14 +412,111 @@ exports.getTransactionById = function(transaction_id) {
     );
 };
 
+/**
+ * Creates a new borrow transaction for a member and book.
+ * Automatically finds an available copy and marks it unavailable.
+ * @param {number} member_id - The ID of the member.
+ * @param {number} book_id - The ID of the book to borrow.
+ * @returns {Promise<{success: boolean}|{error: string}>} - Success status or error message.
+ */
+exports.createTransaction = async function(member_id, book_id) {
 
-// -------------------------------------------------
+    // 1. Find first available copy for this book
+    const copies = await exports.query(
+        `SELECT copy_id FROM bookcopies
+         WHERE book_id = ? AND availability = TRUE
+         ORDER BY copy_id ASC
+         LIMIT 1`,
+        [book_id]
+    );
+
+    if (copies.length === 0) {
+        return { error: "No available copies for this book." };
+    }
+
+    const copy_id = copies[0].copy_id;
+
+    // 2. Create transaction
+    const result = await exports.query(
+        `INSERT INTO borrowtransactions
+             (member_id, copy_id, borrow_date, due_date, status)
+         VALUES (
+             ?,
+             ?,
+             NOW(),
+             DATE_ADD(NOW(), INTERVAL 1 MINUTE),
+             'borrowed'
+         )`,
+        [member_id, copy_id]
+    );
+
+    // 3. Mark copy unavailable
+    await exports.query(
+        'UPDATE bookcopies SET availability = FALSE WHERE copy_id = ?',
+        [copy_id]
+    );
+
+    // 4. Log the activity
+    await exports.logAction(
+        member_id,
+        `Borrowed book_id ${book_id} using copy ${copy_id}`
+    );
+
+    return { success: true };
+};
+
+/**
+ * Marks a transaction as returned, updates the copy status to available, and logs the action.
+ * @param {number} transaction_id - The ID of the transaction to return.
+ * @returns {Promise<{success: boolean}|{success: boolean, error: string}>} - Success status or error message.
+ */
+exports.returnTransaction = async function(transaction_id) {
+    try {
+        // Get transaction to identify member and copy
+        const transaction = await exports.getTransactionById(transaction_id);
+        if (!transaction.length) {
+            return { success: false, error: `Transaction ID ${transaction_id} not found.` };
+        }
+
+        const { member_id, copy_id } = transaction[0];
+
+        // Mark the copy available again
+        await exports.query(
+            'UPDATE bookcopies SET availability = TRUE WHERE copy_id = ?',
+            [copy_id]
+        );
+
+        // Update transaction record
+        await exports.query(
+            `UPDATE borrowtransactions
+             SET returned_date = CURRENT_DATE(), status = 'returned'
+             WHERE transaction_id = ?`,
+            [transaction_id]
+        );
+
+        // Log activity
+        await exports.logAction(member_id, `Returned copy ID ${copy_id}`);
+
+        return { success: true };
+
+    } catch (err) {
+        console.error(`Error returning transaction ID ${transaction_id}:`, err);
+        return { success: false, error: err.message };
+    }
+};
+
+
+// -----------------------------------------------------------------------------
 // FINES FUNCTIONALITY
-// -------------------------------------------------
+// -----------------------------------------------------------------------------
 
+/**
+ * Creates a one-time fine for an overdue transaction if one does not already exist, and sets the transaction status to 'overdue'.
+ * @param {number} transactionId - The ID of the transaction.
+ * @param {number} memberId - The ID of the member (for logging).
+ * @returns {Promise<void>}
+ */
 exports.createFine = async function(transactionId, memberId) {
-    //// -------> Function: Creates a fine for a transaction
-
     // Check if fine already exists for this transaction
     const existing = await exports.query(
         `SELECT fine_id FROM fines WHERE transaction_id = ?`,
@@ -471,9 +545,12 @@ exports.createFine = async function(transactionId, memberId) {
     await exports.logAction(memberId, `Added fine for overdue return, transaction ID ${transactionId}`);
 };
 
+/**
+ * Checks a member's transactions for those that are overdue and have no fine recorded, then applies a fine to each.
+ * @param {number} memberId - The ID of the member.
+ * @returns {Promise<void>}
+ */
 exports.checkAndApplyFines = async function(memberId) {
-    //// -------> Function: Checks for overdue transactions and apply fines
-
     // Find all overdue transactions WITH NO recorded fine
     const rows = await exports.query(
         `SELECT bt.transaction_id
@@ -490,9 +567,12 @@ exports.checkAndApplyFines = async function(memberId) {
     }
 };
 
+/**
+ * Marks all unpaid fines for a given member as paid.
+ * @param {number} memberId - The ID of the member.
+ * @returns {Promise<void>}
+ */
 exports.payFines = async function(memberId) {
-    //// -------> Pays all unpaid fines for a member
-
     await exports.query(
         `UPDATE fines f
          INNER JOIN borrowtransactions bt ON f.transaction_id = bt.transaction_id

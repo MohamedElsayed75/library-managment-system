@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from "react";
-import "./Admin.css"; // Ensure CSS is imported
+import "./Admin.css";
 
-
-const AdminExistingBooks = ({member}) => {
+/////////////////////////////
+// AdminExistingBooks Component
+/////////////////////////////
+const AdminExistingBooks = ({ member }) => {
+  /////////////////////////////
+  // Local State
+  /////////////////////////////
   const [books, setBooks] = useState([]);
-
-  // ---------- PAGINATION ----------
   const [currentPage, setCurrentPage] = useState(1);
   const booksPerPage = 10;
 
@@ -14,7 +17,9 @@ const AdminExistingBooks = ({member}) => {
   const currentBooks = books.slice(indexOfFirst, indexOfLast);
   const totalPages = Math.ceil(books.length / booksPerPage);
 
-  // ---------- FETCH ALL BOOKS ----------
+  /////////////////////////////
+  // Fetch All Books
+  /////////////////////////////
   const fetchBooks = async () => {
     try {
       const res = await fetch("http://localhost:5000/admin/books");
@@ -34,13 +39,15 @@ const AdminExistingBooks = ({member}) => {
     fetchBooks();
   }, []);
 
-  // ---------- ADD COPY ----------
+  /////////////////////////////
+  // Add Copy
+  /////////////////////////////
   const handleAddCopy = async (book_id, book_title) => {
     try {
       const res = await fetch("http://localhost:5000/admin/addCopy", {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({book_id: book_id, member_id: member.member_id})
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ book_id, member_id: member.member_id })
       });
 
       const data = await res.json();
@@ -57,16 +64,19 @@ const AdminExistingBooks = ({member}) => {
     }
   };
 
-  // ---------- DELETE COPY ----------
+  /////////////////////////////
+  // Delete Copy
+  /////////////////////////////
   const handleDelete = async (book_id) => {
     if (!window.confirm("Delete a copy of this book?")) return;
 
     try {
       const res = await fetch("http://localhost:5000/admin/deleteCopy", {
         method: "DELETE",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({bookId: book_id, memberId: member.member_id})
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookId: book_id, memberId: member.member_id })
       });
+
       const data = await res.json();
 
       if (!res.ok) {
@@ -75,12 +85,15 @@ const AdminExistingBooks = ({member}) => {
       }
 
       alert("Copy deleted.");
-      fetchBooks(); // refresh after delete
+      fetchBooks();
     } catch (err) {
       console.error("Error deleting copy:", err);
     }
   };
 
+  /////////////////////////////
+  // JSX
+  /////////////////////////////
   return (
     <div className="admin-section">
       <h3>Existing Books</h3>
@@ -93,7 +106,7 @@ const AdminExistingBooks = ({member}) => {
 
           return (
             <div key={book.book_id} className="admin-book-item">
-              {/* ----------- IMAGE ----------- */}
+              {/* IMAGE */}
               {coverUrl ? (
                 <img
                   src={coverUrl}
@@ -107,7 +120,7 @@ const AdminExistingBooks = ({member}) => {
                 <div className="no-image">No Image</div>
               )}
 
-              {/* ----------- BOOK DETAILS ----------- */}
+              {/* BOOK DETAILS */}
               <div className="book-details">
                 <strong>{book.title}</strong>
                 <span>{book.author_name}</span>
@@ -117,7 +130,7 @@ const AdminExistingBooks = ({member}) => {
                 </p>
               </div>
 
-              {/* ----------- ACTION BUTTONS ----------- */}
+              {/* ACTION BUTTONS */}
               <div className="book-actions">
                 <button
                   className="add-copy"
@@ -137,7 +150,7 @@ const AdminExistingBooks = ({member}) => {
         })}
       </div>
 
-      {/* ----------- PAGINATION ----------- */}
+      {/* PAGINATION */}
       <div className="pagination">
         <button
           disabled={currentPage === 1}
@@ -167,4 +180,7 @@ const AdminExistingBooks = ({member}) => {
   );
 };
 
+/////////////////////////////
+// Export AdminExistingBooks
+/////////////////////////////
 export default AdminExistingBooks;

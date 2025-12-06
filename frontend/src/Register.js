@@ -3,77 +3,68 @@ import { Link, useNavigate } from "react-router-dom";
 import { verifyTokenRequest } from "./services/api";
 import "./Register.css";
 
+/////////////////////////////
+// Register Component
+/////////////////////////////
 const Register = () => {
   const navigate = useNavigate();
 
-  // ------------------- START AUTHENTICATION CHECK -------------------
+  /////////////////////////////
+  // Authentication Check
+  /////////////////////////////
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) return; // no token, user stays on login/register
+    if (!token) return;
 
     async function verifyToken() {
       try {
         const data = await verifyTokenRequest(token);
-        
-          // token valid → redirect to homepage
-          if (data.member) {
-            navigate("/homepage");
-          }
-        } catch (err) {
-          // token invalid → clear it & allow user to access login/register
-          console.error("Token verification failed:", err);
-          localStorage.removeItem("token");
-        }
+
+        if (data.member) navigate("/homepage");
+      } catch (err) {
+        console.error("Token verification failed:", err);
+        localStorage.removeItem("token");
       }
+    }
 
     verifyToken();
   }, [navigate]);
-  // ------------------- END AUTHENTICATION CHECK -------------------
 
-
-
-  // Local state for inputs and errors
+  /////////////////////////////
+  // Local State
+  /////////////////////////////
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [address, setAddress] = useState("");
   const [error, setError] = useState("");
 
-  // Handle registration form submission
+  /////////////////////////////
+  // Handle Registration
+  /////////////////////////////
   const handleRegister = async (e) => {
     e.preventDefault();
-
-    // Clear previous errors
     setError("");
 
-    // Minimal frontend validation
     if (!username || !email || !password || !address) {
       setError("All fields are required.");
       return;
     }
 
     try {
-      // --- BACKEND CALL ---
       const response = await fetch("http://localhost:5000/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: username,
-          email,
-          password,
-          address,
-        }),
+        body: JSON.stringify({ name: username, email, password, address }),
       });
 
       const data = await response.json();
 
       if (!data.success) {
-        // Show error message from backend
         setError(data.errorMessage || "Registration failed");
         return;
       }
 
-      // On success, navigate to login page with success message
       navigate("/", { state: { message: "Registration Done!" } });
 
     } catch (err) {
@@ -82,19 +73,20 @@ const Register = () => {
     }
   };
 
+  /////////////////////////////
+  // JSX
+  /////////////////////////////
   return (
     <div className="register-wrapper">
       <div className="register-container">
         <h2>Library Register</h2>
 
-        {/* Show frontend/backend errors */}
         {error && (
           <p style={{ color: "red", textAlign: "center", marginBottom: "15px" }}>
             {error}
           </p>
         )}
 
-        {/* Username input */}
         <div className="input-group">
           <label htmlFor="username">Username</label>
           <input
@@ -106,7 +98,6 @@ const Register = () => {
           />
         </div>
 
-        {/* Email input */}
         <div className="input-group">
           <label htmlFor="email">Email</label>
           <input
@@ -118,7 +109,6 @@ const Register = () => {
           />
         </div>
 
-        {/* Password input */}
         <div className="input-group">
           <label htmlFor="password">Password</label>
           <input
@@ -130,7 +120,6 @@ const Register = () => {
           />
         </div>
 
-        {/* Address input */}
         <div className="input-group">
           <label htmlFor="address">Address</label>
           <input
@@ -142,12 +131,10 @@ const Register = () => {
           />
         </div>
 
-        {/* Register button */}
         <button className="btn-register" onClick={handleRegister}>
           Register
         </button>
 
-        {/* Link to login page */}
         <p className="auth-switch">
           Already have an account? <Link to="/">Log In</Link>
         </p>
@@ -156,4 +143,7 @@ const Register = () => {
   );
 };
 
+/////////////////////////////
+// Export Register
+/////////////////////////////
 export default Register;

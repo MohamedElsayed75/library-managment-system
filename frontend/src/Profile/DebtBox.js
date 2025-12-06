@@ -1,4 +1,10 @@
+/////////////////////////////
+// DebtBox Component
+/////////////////////////////
 const DebtBox = ({ amountOwed }) => {
+  /////////////////////////////
+  // JSX
+  /////////////////////////////
   return (
     <div className="debt-box">
       <h2>Amount Owed</h2>
@@ -7,4 +13,7 @@ const DebtBox = ({ amountOwed }) => {
   );
 };
 
+/////////////////////////////
+// Export DebtBox
+/////////////////////////////
 export default DebtBox;

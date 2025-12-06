@@ -5,9 +5,15 @@ const jwt = require('jsonwebtoken');
 const app = express();
 const PORT = 5000;
 
+/////////////////////////////
+// Middleware
+/////////////////////////////
 app.use(cors()); // allow all origins
 app.use(express.json()); // parse JSON bodies
 
+/////////////////////////////
+// Routes
+/////////////////////////////
 const authRouter = require("./routes/auth");
 app.use("/auth", authRouter);
 
@@ -23,6 +29,9 @@ app.use("/user", userRouter);
 const adminRouter = require("./routes/admin");
 app.use("/admin", adminRouter);
 
+/////////////////////////////
+// Start Server
+/////////////////////////////
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });

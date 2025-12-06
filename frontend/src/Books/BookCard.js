@@ -1,11 +1,20 @@
+/////////////////////////////
+// BookCard Component
+/////////////////////////////
 const BookCard = ({ book, member, onClick }) => {
-  // Build OpenLibrary cover URL
+  /////////////////////////////
+  // Cover Image URL
+  /////////////////////////////
   const coverUrl = book.isbn
     ? `https://covers.openlibrary.org/b/isbn/${book.isbn}-L.jpg`
     : null;
+
+  /////////////////////////////
+  // JSX
+  /////////////////////////////
   return (
     <div className="book-card" onClick={onClick}>
-      
+
       {/* ------------------------ BOOK IMAGE ------------------------ */}
       {coverUrl ? (
         <img
@@ -39,11 +48,9 @@ const BookCard = ({ book, member, onClick }) => {
 
       {/* ------------------------ BOOK INFO ------------------------ */}
       <h3>{book.title}</h3>
-
       <p>
         <strong>Author:</strong> {book.author_name}
       </p>
-
       <p>
         <strong>Year:</strong> {book.publication_year}
       </p>
@@ -56,4 +63,7 @@ const BookCard = ({ book, member, onClick }) => {
   );
 };
 
+/////////////////////////////
+// Export BookCard
+/////////////////////////////
 export default BookCard;

@@ -8,9 +8,9 @@ const {
     logAction
 } = require('../database/database.js');
 
-// -------------------------------------------------
+/////////////////////////////
 // REGISTER
-// -------------------------------------------------
+/////////////////////////////
 router.post('/register', async (req, res) => {
     try {
         const { name, email, password, address } = req.body;
@@ -25,25 +25,22 @@ router.post('/register', async (req, res) => {
             return res.status(400).json({ errorMessage: "Email already registered" });
         }
 
-        // Store user exactly as provided
         const newId = await registerMember(name, email, password, address);
-
 
         res.json({
             success: true,
             message: "Registration successful",
             member_id: newId
         });
-
     } catch (err) {
         console.error("REGISTER ERROR:", err);
         res.status(500).json({ errorMessage: "Server error" });
     }
 });
 
-// -------------------------------------------------
+/////////////////////////////
 // LOGIN
-// -------------------------------------------------
+/////////////////////////////
 router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -60,10 +57,12 @@ router.post('/login', async (req, res) => {
 
         await logAction(member.member_id, "User logged in");
 
-        // JWT AUTH
+        // JWT Authentication
         const SECRET = 'my_super_secret_1234567890'; 
-        const token = jwt.sign({ member_id: member.member_id, is_admin: member.is_admin, name: member.name }, SECRET)
-
+        const token = jwt.sign(
+            { member_id: member.member_id, is_admin: member.is_admin, name: member.name },
+            SECRET
+        );
 
         res.json({
             success: true,
@@ -74,16 +73,15 @@ router.post('/login', async (req, res) => {
                 email: member.email,
                 is_admin: member.is_admin
             },
-            token: token
+            token
         });
-
-
-
     } catch (err) {
         console.error("LOGIN ERROR:", err);
         res.status(500).json({ errorMessage: "Server error" });
     }
 });
 
-
+/////////////////////////////
+// Export Router
+/////////////////////////////
 module.exports = router;

@@ -6,10 +6,16 @@ import DebtBox from "./DebtBox";
 import BorrowedBooks from "./BorrowedBooks";
 import ReservedBooks from "./ReservedBooks";
 
+/////////////////////////////
+// Profile Component
+/////////////////////////////
 const Profile = () => {
   const navigate = useNavigate();
   const [member, setMember] = useState(null);
-  // ---------------------- AUTH CHECK ----------------------
+
+  /////////////////////////////
+  // Authentication Check
+  /////////////////////////////
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -30,18 +36,22 @@ const Profile = () => {
 
     verifyToken();
   }, [navigate]);
-  // ---------------------- END AUTH CHECK ----------------------
 
+  /////////////////////////////
+  // Profile Data State
+  /////////////////////////////
   const [profileData, setProfileData] = useState({
     amountOwed: 0,
     borrowedBooks: [],
     reservedBooks: []
   });
 
-  // ---------------------- FETCH PROFILE DATA ----------------------
+  /////////////////////////////
+  // Fetch Profile Data
+  /////////////////////////////
   const fetchProfileData = async (memberId) => {
     try {
-      const res = await fetch(`http://localhost:5000/user/profile?memberId=${memberId}`)
+      const res = await fetch(`http://localhost:5000/user/profile?memberId=${memberId}`);
       const data = await res.json();
 
       setProfileData({
@@ -54,26 +64,20 @@ const Profile = () => {
     }
   };
 
-useEffect(() => {
-  if (member) {
-    console.log("member found");
-    fetchProfileData(member.member_id);
-  } else {
-    console.log("member not found")
-  }
-}, [member]);
+  useEffect(() => {
+    if (member) fetchProfileData(member.member_id);
+  }, [member]);
 
-  // ---------------------- PAY FINES ----------------------
+  /////////////////////////////
+  // Handle Pay Fines
+  /////////////////////////////
   const handlePayFines = async () => {
     try {
       const res = await fetch(`http://localhost:5000/user/payfines`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ memberId: member.member_id })
       });
-
 
       const data = await res.json();
       alert(data.message);
@@ -84,6 +88,9 @@ useEffect(() => {
     }
   };
 
+  /////////////////////////////
+  // JSX
+  /////////////////////////////
   return (
     <div className="profile-wrapper">
       <h2 className="profile-title">My BookShelf</h2>
@@ -119,4 +126,7 @@ useEffect(() => {
   );
 };
 
+/////////////////////////////
+// Export Profile
+/////////////////////////////
 export default Profile;

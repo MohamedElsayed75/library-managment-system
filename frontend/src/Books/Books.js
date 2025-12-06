@@ -3,12 +3,21 @@ import BookCard from "./BookCard";
 import BookDetails from "./BookDetails";
 import "./Books.css";
 
+/////////////////////////////
+// Books Component
+/////////////////////////////
 const Books = ({ member }) => {
+  /////////////////////////////
+  // Local State
+  /////////////////////////////
   const [books, setBooks] = useState([]);
   const [selectedBook, setSelectedBook] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
 
+  /////////////////////////////
+  // Fetch Books from Backend
+  /////////////////////////////
   const fetchBooks = async (query = "") => {
     setLoading(true);
     try {
@@ -26,21 +35,29 @@ const Books = ({ member }) => {
     }
   };
 
-  // Load all books on initial render
+  /////////////////////////////
+  // Load Books on Initial Render
+  /////////////////////////////
   useEffect(() => {
     fetchBooks();
   }, []);
 
-  // Debounced search
+  /////////////////////////////
+  // Debounced Search
+  /////////////////////////////
   useEffect(() => {
     const delay = setTimeout(() => fetchBooks(searchQuery), 500);
     return () => clearTimeout(delay);
   }, [searchQuery]);
 
+  /////////////////////////////
+  // JSX
+  /////////////////////////////
   return (
     <div className="books-wrapper">
       <h2 className="books-title">Library Books</h2>
 
+      {/* Search Box */}
       <div className="search-container">
         <input
           type="text"
@@ -51,6 +68,7 @@ const Books = ({ member }) => {
         />
       </div>
 
+      {/* Books Grid */}
       <div className="books-grid">
         {books.map((book) => (
           <BookCard
@@ -61,14 +79,14 @@ const Books = ({ member }) => {
           />
         ))}
 
-        {/* Overlay loading message without removing the grid */}
+        {/* Overlay Loading */}
         {loading && (
           <div className="loading-overlay">
             <p>Loading library catalog...</p>
           </div>
         )}
 
-        {/* Show "no results" only if not loading */}
+        {/* No Results Message */}
         {!loading && books.length === 0 && (
           <div className="no-results">
             <p>No books found matching your search.</p>
@@ -76,6 +94,7 @@ const Books = ({ member }) => {
         )}
       </div>
 
+      {/* Book Details Popup */}
       {selectedBook && (
         <BookDetails
           book={selectedBook}
@@ -88,4 +107,7 @@ const Books = ({ member }) => {
   );
 };
 
+/////////////////////////////
+// Export Books
+/////////////////////////////
 export default Books;

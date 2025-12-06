@@ -8,6 +8,9 @@ const {
     deleteAvailableCopy
 } = require("../database/database.js");
 
+/////////////////////////////
+// GET All Books
+/////////////////////////////
 router.get("/books", async (req, res) => {
     try {
         const books = await getAllBooks();
@@ -18,25 +21,26 @@ router.get("/books", async (req, res) => {
     }
 });
 
+/////////////////////////////
+// POST Add New Book
+/////////////////////////////
 router.post("/addBook", async (req, res) => {
-  try {
-    const newBook = req.body.newBook; // directly from frontend
-    const member_id = req.body.member_id;
+    try {
+        const newBook = req.body.newBook;
+        const member_id = req.body.member_id;
 
-    // Call the service
-    const result = await createBook(newBook, member_id);
+        await createBook(newBook, member_id);
 
-    return res.status(201).json({
-      message: "Book added successfully",
-    });
-
-  } catch (err) {
-    console.error("Error adding book:", err);
-    return res.status(500).json({ message: "Server error while adding book" });
-  }
+        return res.status(201).json({ message: "Book added successfully" });
+    } catch (err) {
+        console.error("Error adding book:", err);
+        return res.status(500).json({ message: "Server error while adding book" });
+    }
 });
 
-
+/////////////////////////////
+// POST Add Copy
+/////////////////////////////
 router.post("/addCopy", async (req, res) => {
     try {
         const { book_id, member_id } = req.body;
@@ -49,6 +53,9 @@ router.post("/addCopy", async (req, res) => {
     }
 });
 
+/////////////////////////////
+// DELETE Copy
+/////////////////////////////
 router.delete("/deleteCopy", async (req, res) => {
     const { bookId, memberId } = req.body;
 
@@ -62,7 +69,6 @@ router.delete("/deleteCopy", async (req, res) => {
         }
 
         return res.status(200).json(result);
-
     } catch (error) {
         console.error("Route error:", error);
         return res.status(500).json({
@@ -72,6 +78,7 @@ router.delete("/deleteCopy", async (req, res) => {
     }
 });
 
-
-
+/////////////////////////////
+// Export Router
+/////////////////////////////
 module.exports = router;

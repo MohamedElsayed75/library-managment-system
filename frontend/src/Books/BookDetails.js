@@ -1,12 +1,19 @@
-import React, { useState } from "react"; 
+import React, { useState } from "react";
 
+/////////////////////////////
+// BookDetails Component
+/////////////////////////////
 const BookDetails = ({ book, member, refresh, onClose }) => {
+  /////////////////////////////
+  // Local State
+  /////////////////////////////
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isBorrowing, setIsBorrowing] = useState(false);
 
-  console.log(book);
-
+  /////////////////////////////
+  // Handle Borrow Book
+  /////////////////////////////
   const handleBorrow = async () => {
     setErrorMessage("");
     setSuccessMessage("");
@@ -19,7 +26,7 @@ const BookDetails = ({ book, member, refresh, onClose }) => {
         body: JSON.stringify({ 
           book_id: book.book_id,
           member_id: member.member_id
-         }), 
+        }), 
       });
 
       const data = await res.json();
@@ -33,11 +40,10 @@ const BookDetails = ({ book, member, refresh, onClose }) => {
       setSuccessMessage(`You borrowed: ${book.title}`);
       setIsBorrowing(false);
 
-      // Optionally close popup after short delay
+      // Close popup and refresh after short delay
       setTimeout(() => {
         onClose();
         refresh();
-
       }, 1500);
     } catch (err) {
       console.error("Borrow request failed:", err);
@@ -46,13 +52,14 @@ const BookDetails = ({ book, member, refresh, onClose }) => {
     }
   };
 
+  /////////////////////////////
+  // JSX
+  /////////////////////////////
   return (
     <div className="book-details-overlay">
       <div className="book-details-box">
         {/* Close popup */}
-        <button className="close-btn" onClick={onClose}>
-          X
-        </button>
+        <button className="close-btn" onClick={onClose}>X</button>
 
         <h2>{book.title}</h2>
 
@@ -82,7 +89,7 @@ const BookDetails = ({ book, member, refresh, onClose }) => {
           <p style={{ color: "green", marginTop: "10px" }}>{successMessage}</p>
         )}
 
-        {/* Borrow button only if copies are available */}
+        {/* Borrow button */}
         {book.copy_count > 0 && (
           <button
             className="borrow-btn"
@@ -93,7 +100,7 @@ const BookDetails = ({ book, member, refresh, onClose }) => {
           </button>
         )}
 
-        {/* If no copies */}
+        {/* No copies message */}
         {book.copy_count === 0 && (
           <p style={{ color: "#777", marginTop: "10px" }}>
             No copies available to borrow.
@@ -104,4 +111,7 @@ const BookDetails = ({ book, member, refresh, onClose }) => {
   );
 };
 
+/////////////////////////////
+// Export BookDetails
+/////////////////////////////
 export default BookDetails;

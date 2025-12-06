@@ -85,3 +85,36 @@ CREATE TABLE activitylogs (
     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (member_id) REFERENCES members(member_id)
 );
+
+-- VIEW
+CREATE OR REPLACE VIEW view_books_full AS
+SELECT 
+    b.book_id,
+    b.title,
+    b.isbn,
+    b.genre,
+    b.language,
+    b.publication_year,
+
+    p.name AS publisher_name,
+    a.name AS author_name,
+
+    -- Count only available copies
+    COUNT(CASE WHEN bc.availability = 1 THEN bc.copy_id END) AS copy_count
+
+FROM books b
+
+LEFT JOIN publishers p 
+    ON b.publisher_id = p.publisher_id
+
+LEFT JOIN author a
+    ON b.author_id = a.author_id
+
+LEFT JOIN bookcopies bc 
+    ON b.book_id = bc.book_id
+
+GROUP BY 
+    b.book_id, b.title, b.isbn, b.genre, b.language, 
+    b.publication_year, p.name, a.name
+
+ORDER BY b.title;
