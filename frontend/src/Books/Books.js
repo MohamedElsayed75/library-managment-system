@@ -3,32 +3,21 @@ import BookCard from "./BookCard";
 import BookDetails from "./BookDetails";
 import "./Books.css";
 
-const Books = ({member}) => {
-
+const Books = ({ member }) => {
   const [books, setBooks] = useState([]);
   const [selectedBook, setSelectedBook] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const fetchBooks = async () => {
+  const fetchBooks = async (query = "") => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-
-      const res = await fetch(
-        `http://localhost:5000/books?search=${searchQuery}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
+      const res = await fetch(`http://localhost:5000/books?search=${query}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await res.json();
-
-      if (data.success) {
-        setBooks(data.books);
-      } else {
-        setBooks([]);
-      }
+      setBooks(data.success ? data.books : []);
     } catch (err) {
       console.error("Failed to fetch books", err);
       setBooks([]);
@@ -37,14 +26,14 @@ const Books = ({member}) => {
     }
   };
 
-  // Load all books on page load
+  // Load all books on initial render
   useEffect(() => {
     fetchBooks();
   }, []);
 
-  // Auto-search when user types (debounced)
+  // Debounced search
   useEffect(() => {
-    const delay = setTimeout(fetchBooks, 500);
+    const delay = setTimeout(() => fetchBooks(searchQuery), 500);
     return () => clearTimeout(delay);
   }, [searchQuery]);
 
@@ -63,26 +52,37 @@ const Books = ({member}) => {
       </div>
 
       <div className="books-grid">
-        {loading ? (
-          <p className="loading-text">Loading library catalog...</p>
-        ) : books.length === 0 ? (
+        {books.map((book) => (
+          <BookCard
+            key={book.book_id}
+            book={book}
+            member={member}
+            onClick={() => setSelectedBook(book)}
+          />
+        ))}
+
+        {/* Overlay loading message without removing the grid */}
+        {loading && (
+          <div className="loading-overlay">
+            <p>Loading library catalog...</p>
+          </div>
+        )}
+
+        {/* Show "no results" only if not loading */}
+        {!loading && books.length === 0 && (
           <div className="no-results">
             <p>No books found matching your search.</p>
           </div>
-        ) : (
-          books.map((book) => (
-            <BookCard
-              key={book.book_id}
-              book={book}
-              member={member}
-              onClick={() => setSelectedBook(book)}
-            />
-          ))
         )}
       </div>
 
       {selectedBook && (
-        <BookDetails book={selectedBook} member={member} refresh={() => fetchBooks()} onClose={() => setSelectedBook(null)} />
+        <BookDetails
+          book={selectedBook}
+          member={member}
+          refresh={() => fetchBooks(searchQuery)}
+          onClose={() => setSelectedBook(null)}
+        />
       )}
     </div>
   );
