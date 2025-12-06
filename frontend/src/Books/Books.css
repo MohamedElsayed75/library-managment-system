@@ -207,6 +207,17 @@ body{
   background-color: #00ff59;
 }
 
+.borrow-btn:disabled {
+  background-color: #b8a092 !important;  /* dull brown */
+  color: #777 !important;
+  cursor: not-allowed !important;
+  opacity: 0.6;
+  transform: none !important;
+}
+.borrow-btn:disabled:hover {
+  background-color: #b8a092 !important; /* block hover effect */
+}
+
 .Register-btn {
   width: 100%;
   padding: 10px;

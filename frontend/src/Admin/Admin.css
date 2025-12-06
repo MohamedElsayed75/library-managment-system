@@ -3,7 +3,6 @@
     max-width: 800px;
     margin: 40px auto;
     padding: 20px;
-    font-family: sans-serif;
 }
 
 .admin-title {
@@ -18,7 +17,7 @@
 
   background-color: #f3e9dc;
   padding: 30px 30px 30px 30px; 
-  
+  color: #8b5e3c;
   border-radius: 8px;
 }
 

@@ -16,7 +16,7 @@
 
   background-color: #f3e9dc;
   padding: 30px 30px 30px 30px; 
-  
+  color: #8b5e3c;
   border-radius: 8px;
 }
 .profile-sections {
@@ -34,10 +34,40 @@
   border-radius: 8px;
 }
 
+.debt-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+
 .debt-amount {
   font-size: 26px;
   font-weight: bold;
   color: #8b5e3c;
+}
+
+/* Yellow Button Styling */
+.pay-fines-button {
+  background-color: #ffd54f;  /* soft yellow */
+  border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s ease;
+  color: #5a4600;
+}
+
+.pay-fines-button:hover:not(:disabled) {
+  background-color: #ffca28; /* darker yellow */
+}
+
+.pay-fines-button:disabled {
+  background-color: #e0e0e0;
+  cursor: not-allowed;
+  color: #888;
 }
 
 /* Borrowed books box */
@@ -95,4 +125,43 @@ li {
 .back-button:hover {
   background-color: #c08c5a;
   color: white;
+}
+
+.borrowed-item {
+  display: flex;
+  justify-content: space-between; /* title left, button right */
+  align-items: center;
+  background: #f3e9dc;
+  padding: 12px 15px;
+  border-radius: 6px;
+  border-left: 5px solid #8b5e3c;
+  border-right: 5px solid #8b5e3c;
+  margin-bottom: 10px;
+}
+
+.borrow-info {
+  font-size: 18px;
+  color: #8b5e3c;
+  font-weight: 500;
+}
+
+.return-btn {
+  background-color: #ff6b6b;          /* soft red */
+  border: none;
+  color: white;
+  padding: 8px 16px;
+  font-size: 15px;
+  font-weight: bold;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.25s ease;
+}
+
+.return-btn:hover {
+  background-color: #e63946;          /* darker red */
+  transform: scale(1.05);
+}
+
+.return-btn:active {
+  transform: scale(0.95);
 }
