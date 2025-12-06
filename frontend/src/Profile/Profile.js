@@ -67,48 +67,23 @@ const Profile = () => {
   useEffect(() => {
     if (member) fetchProfileData(member.member_id);
   }, [member]);
-
-  /////////////////////////////
-  // Handle Pay Fines
-  /////////////////////////////
-  const handlePayFines = async () => {
-    try {
-      const res = await fetch(`http://localhost:5000/user/payfines`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ memberId: member.member_id })
-      });
-
-      const data = await res.json();
-      alert(data.message);
-
-      fetchProfileData(member.member_id);
-    } catch (err) {
-      console.error("Error paying fines:", err);
-    }
-  };
-
   /////////////////////////////
   // JSX
   /////////////////////////////
   return (
     <div className="profile-wrapper">
-      <h2 className="profile-title">My BookShelf</h2>
+      <h2 className="profile-title">My Bookshelf</h2>
 
       <button className="back-button" onClick={() => navigate("/")}>
         Back
       </button>
 
-      <button
-        className="pay-fines-button"
-        onClick={handlePayFines}
-        disabled={Number(profileData.amountOwed) === 0}
-      >
-        Pay Fines
-      </button>
-
       <div className="profile-sections">
-        <DebtBox amountOwed={profileData.amountOwed} />
+        <DebtBox
+          amountOwed={profileData.amountOwed}
+          memberId={member?.member_id}
+          refreshProfile={() => fetchProfileData(member.member_id)}
+        />
 
         <BorrowedBooks
           borrowedBooks={profileData.borrowedBooks}
@@ -125,7 +100,6 @@ const Profile = () => {
     </div>
   );
 };
-
 /////////////////////////////
 // Export Profile
 /////////////////////////////
