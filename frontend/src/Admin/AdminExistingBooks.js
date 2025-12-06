@@ -37,8 +37,11 @@ const AdminExistingBooks = ({member}) => {
   // ---------- ADD COPY ----------
   const handleAddCopy = async (book_id, book_title) => {
     try {
-      const res = await fetch(`http://localhost:5000/admin/addCopy/${book_id}`, 
-        {method: "POST"});
+      const res = await fetch("http://localhost:5000/admin/addCopy", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({book_id: book_id, member_id: member.member_id})
+      });
 
       const data = await res.json();
 
@@ -54,13 +57,16 @@ const AdminExistingBooks = ({member}) => {
     }
   };
 
-  // ---------- DELETE BOOK ----------
+  // ---------- DELETE COPY ----------
   const handleDelete = async (book_id) => {
-    if (!window.confirm("Delete this book?")) return;
+    if (!window.confirm("Delete a copy of this book?")) return;
 
     try {
-      const res = await fetch(`http://localhost:5000/admin/books/${book_id}`, {method: "DELETE"});
-
+      const res = await fetch("http://localhost:5000/admin/deleteCopy", {
+        method: "DELETE",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({bookId: book_id, memberId: member.member_id})
+      });
       const data = await res.json();
 
       if (!res.ok) {
@@ -68,10 +74,10 @@ const AdminExistingBooks = ({member}) => {
         return;
       }
 
-      alert("Book deleted.");
+      alert("Copy deleted.");
       fetchBooks(); // refresh after delete
     } catch (err) {
-      console.error("Error deleting book:", err);
+      console.error("Error deleting copy:", err);
     }
   };
 
@@ -123,7 +129,7 @@ const AdminExistingBooks = ({member}) => {
                   className="delete"
                   onClick={() => handleDelete(book.book_id)}
                 >
-                  Delete
+                  Delete Copy
                 </button>
               </div>
             </div>
