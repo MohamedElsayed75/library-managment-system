@@ -47,7 +47,7 @@ const AdminExistingBooks = ({ member }) => {
       const res = await fetch("http://localhost:5000/admin/addCopy", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ book_id, member_id: member.member_id })
+        body: JSON.stringify({ book_id, member_id: member.member_id }),
       });
 
       const data = await res.json();
@@ -74,7 +74,7 @@ const AdminExistingBooks = ({ member }) => {
       const res = await fetch("http://localhost:5000/admin/deleteCopy", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bookId: book_id, memberId: member.member_id })
+        body: JSON.stringify({ bookId: book_id, memberId: member.member_id }),
       });
 
       const data = await res.json();

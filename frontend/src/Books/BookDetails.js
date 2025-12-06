@@ -9,7 +9,7 @@ const BookDetails = ({ book, member, refresh, onClose }) => {
   /////////////////////////////
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const [isBorrowing, setIsBorrowing] = useState(false);
+  const [isBorrowing, setIsBorrowing] = useState(false); // stays true until popup closes
 
   /////////////////////////////
   // Handle Borrow Book
@@ -17,28 +17,30 @@ const BookDetails = ({ book, member, refresh, onClose }) => {
   const handleBorrow = async () => {
     setErrorMessage("");
     setSuccessMessage("");
-    setIsBorrowing(true);
+    setIsBorrowing(true); // disable button immediately
 
     try {
       const res = await fetch("http://localhost:5000/user/borrow", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           book_id: book.book_id,
-          member_id: member.member_id
-        }), 
+          member_id: member.member_id,
+        }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
         setErrorMessage(data.message || "Could not borrow book.");
-        setIsBorrowing(false);
+        setIsBorrowing(false); // allow retry
         return;
       }
 
       setSuccessMessage(`You borrowed: ${book.title}`);
-      setIsBorrowing(false);
+
+      // Keep button disabled — do NOT set isBorrowing(false)
+      // Disable until popup closes
 
       // Close popup and refresh after short delay
       setTimeout(() => {
@@ -48,7 +50,7 @@ const BookDetails = ({ book, member, refresh, onClose }) => {
     } catch (err) {
       console.error("Borrow request failed:", err);
       setErrorMessage("Error: unable to borrow book.");
-      setIsBorrowing(false);
+      setIsBorrowing(false); // allow retry in error case
     }
   };
 
@@ -59,7 +61,9 @@ const BookDetails = ({ book, member, refresh, onClose }) => {
     <div className="book-details-overlay">
       <div className="book-details-box">
         {/* Close popup */}
-        <button className="close-btn" onClick={onClose}>X</button>
+        <button className="close-btn" onClick={onClose}>
+          X
+        </button>
 
         <h2>{book.title}</h2>
 
@@ -94,7 +98,7 @@ const BookDetails = ({ book, member, refresh, onClose }) => {
           <button
             className="borrow-btn"
             onClick={handleBorrow}
-            disabled={isBorrowing}
+            disabled={isBorrowing} // stays disabled until popup closes
           >
             {isBorrowing ? "Borrowing..." : "Borrow"}
           </button>

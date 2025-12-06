@@ -37,19 +37,22 @@ const BorrowedBooks = ({ borrowedBooks, memberId, refresh }) => {
         <p>No borrowed books.</p>
       ) : (
         <ul>
-          {borrowedBooks.map((b) => (
-            <li key={b.transaction_id}>
-              <strong>{b.book_title}</strong> — {b.days_remaining} day{b.days_remaining !== 1 ? "s" : ""} remaining
+        {borrowedBooks.map((b) => (
+          <li key={b.transaction_id} className="borrowed-item">
+            <div className="borrow-info">
+              <strong>{b.book_title}</strong> — {b.days_remaining} day
+              {b.days_remaining !== 1 ? "s" : ""} remaining
+            </div>
 
-              <button
-                className="return-btn"
-                onClick={() => handleReturn(b.transaction_id)}
-              >
-                Return
-              </button>
-            </li>
-          ))}
-        </ul>
+            <button
+              className="return-btn"
+              onClick={() => handleReturn(b.transaction_id)}
+            >
+              Return
+            </button>
+          </li>
+        ))}
+      </ul>
       )}
     </div>
   );

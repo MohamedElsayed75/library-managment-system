@@ -54,11 +54,12 @@ const HomePage = () => {
             <button>Profile</button>
           </Link>
 
-          {member?.is_admin && (
+          {Boolean(member?.is_admin) && (
             <Link to="/admin">
               <button>Admin Panel</button>
             </Link>
           )}
+
         </div>
 
         {/* Right-side buttons */}
