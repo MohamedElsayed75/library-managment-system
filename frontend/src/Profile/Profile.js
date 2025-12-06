@@ -9,13 +9,6 @@ import ReservedBooks from "./ReservedBooks";
 const Profile = () => {
   const navigate = useNavigate();
   const [member, setMember] = useState(null);
-
-  const [profileData, setProfileData] = useState({
-    amountOwed: 0,
-    borrowedBooks: [],
-    reservedBooks: []
-  });
-
   // ---------------------- AUTH CHECK ----------------------
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -37,8 +30,13 @@ const Profile = () => {
 
     verifyToken();
   }, [navigate]);
-  console.log(member);
   // ---------------------- END AUTH CHECK ----------------------
+
+  const [profileData, setProfileData] = useState({
+    amountOwed: 0,
+    borrowedBooks: [],
+    reservedBooks: []
+  });
 
   // ---------------------- FETCH PROFILE DATA ----------------------
   const fetchProfileData = async (memberId) => {

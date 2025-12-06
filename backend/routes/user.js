@@ -1,6 +1,5 @@
 const express = require("express");
 const router = express.Router();
-const authenticateToken = require("../middleware/auth.js");
 //database import 
 const { 
   createTransaction, 
@@ -92,7 +91,7 @@ router.post("/payfines", async (req, res) => {
       await payFines(memberId);
 
       return res.json({ message: "Fines paid successfully" });
-      
+
   } catch (error) {
       console.error("Pay fines route error:", error);
       return res.status(500).json({ message: "Server error while paying fines" });
