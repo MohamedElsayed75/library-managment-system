@@ -8,14 +8,18 @@
 
 .admin-title {
   display: flex;
-  margin: 10px , auto;
-  justify-content: center;
   align-items: center;
-  color: #8b5e3c;
-  text-align: center;
-  margin-bottom: 20px;
+  justify-content: center;
+
+  width: 45%;
+  margin: 30px auto;   
+  border-left: 20px solid #8b5e3c;
+  border-right: 20px solid #8b5e3c;
+
   background-color: #f3e9dc;
-  padding: 20px;    
+  padding: 30px 30px 30px 30px; 
+  
+  border-radius: 8px;
 }
 
 /* -------------------- Admin Sections -------------------- */
@@ -185,4 +189,23 @@
 
 .pagination button.active {
     font-weight: bold;
+}
+
+.back-button {
+  position: absolute;
+  top: 50px;
+  left: 50px;
+
+  border-left: 20px solid #8b5e3c;
+  border-right: 20px solid #8b5e3c;
+
+  background-color: #f3e9dc;
+  color: #8b5e3c;
+
+  padding: 15px 25px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 20px;
+  transition: 0.3s;
 }
