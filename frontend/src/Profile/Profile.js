@@ -88,7 +88,7 @@ useEffect(() => {
     <div className="profile-wrapper">
       <h2 className="profile-title">My BookShelf</h2>
 
-      <button className="back-button" onClick={() => window.history.back()}>
+      <button className="back-button" onClick={() => navigate("/")}>
         Back
       </button>
 
