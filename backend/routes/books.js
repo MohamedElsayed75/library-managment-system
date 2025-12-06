@@ -2,14 +2,13 @@ const express = require("express");
 const router = express.Router();
 
 const {
-  getAllBooks,
   searchBooks,
   checkAndApplyFines
 } = require("../database/database.js");
 const authenticateToken = require("../middleware/auth.js");
 
 /////////////////////////////
-// GET Books (with optional search)
+// GET Books
 /////////////////////////////
 router.get("/", authenticateToken, async (req, res) => {
   try {
@@ -18,7 +17,7 @@ router.get("/", authenticateToken, async (req, res) => {
 
     await checkAndApplyFines(memberId);
 
-    const books = search ? await searchBooks(search) : await getAllBooks();
+    const books =  await searchBooks(search);
 
     res.json({ success: true, books });
   } catch (error) {
