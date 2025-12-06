@@ -3,7 +3,9 @@ const router = express.Router();
 
 const { 
   createTransaction, 
-  hasOverdueTransactions, 
+  hasOverdueTransactions,
+  hasReachedBorrowLimit,
+  hasBorrowedBook,
   getProfileData, 
   returnTransaction,
   checkAndApplyFines,
@@ -18,13 +20,21 @@ router.post("/borrow", async (req, res) => {
         const book_id  = req.body.book_id;
         const member_id = req.body.member_id;
 
-        if (!book_id) {
-            return res.status(400).json({ message: "book_id is required" });
-        }
+
 
         const hasOverdue = await hasOverdueTransactions(member_id);
         if (hasOverdue) {
             return res.status(400).json({ message: "Cannot borrow books while you have overdue transaction(s)." });
+        }
+
+        const hasReachedLimit = await hasReachedBorrowLimit(member_id); 
+        if (hasReachedLimit) {
+            return res.status(400).json({ message: "You have reached your borrow limit of 3 books." });
+        }
+
+        const hasBorrowedBookBefore = await hasBorrowedBook(member_id, book_id);
+        if (hasBorrowedBookBefore) {
+            return res.status(400).json({ message: "You have already borrowed this book." });
         }
 
         const result = await createTransaction(member_id, book_id);

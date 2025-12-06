@@ -101,6 +101,49 @@ exports.hasOverdueTransactions = async function(member_id) {
 };
 
 /**
+ * Checks if a member has reached the borrow limit.
+ * @param {number} member_id - The ID of the member.
+ * @returns {Promise<boolean>} - True if the member has reached the borrow limit, otherwise false.
+ */
+exports.hasReachedBorrowLimit = async function(member_id) {
+    const rows = await exports.query(
+        `
+        SELECT transaction_id
+        FROM borrowtransactions
+        WHERE member_id = ?
+          AND status = 'borrowed'
+        LIMIT 3
+        `,
+        [member_id]
+    );
+
+    // return true if at least 3 borrowed transactions exist
+    return rows.length >= 3;
+}
+
+exports.hasBorrowedBook = async function(member_id, book_id) {
+    //check if member already borrowed a copy of this book
+    const rows = await exports.query(
+        `
+        SELECT transaction_id
+        FROM borrowtransactions
+        WHERE member_id = ?
+          AND status = 'borrowed'
+          AND copy_id IN (
+            SELECT copy_id
+            FROM bookcopies
+            WHERE book_id = ?
+          )
+        LIMIT 1
+        `,
+        [member_id, book_id]
+    );
+
+    // return true if at least 1 borrowed transaction exists
+    return rows.length > 0;
+}
+
+/**
  * Retrieves a list of books currently borrowed by a member.
  * @param {number} memberId - The ID of the member.
  * @returns {Promise<Array<{member_id: number, transaction_id: number, book_id: number, book_title: string, days_remaining: number}>>} - A list of borrowed books with transaction details.
@@ -307,7 +350,7 @@ exports.searchBooks = async function(searchTerm) {
             b.*,
             a.name AS author_name,
             p.name AS publisher_name,
-            COUNT(bc.copy_id) AS copy_count
+            COUNT(CASE WHEN bc.availability = 1 THEN bc.copy_id END) AS copy_count
         FROM books b
         JOIN author a ON b.author_id = a.author_id
         LEFT JOIN publishers p ON b.publisher_id = p.publisher_id
@@ -540,7 +583,7 @@ exports.createFine = async function(transactionId, memberId) {
         [transactionId]
     );
 
-    console.log(`Added fine for overdue return, transaction ID ${transactionId}`);
+
     //log activity
     await exports.logAction(memberId, `Added fine for overdue return, transaction ID ${transactionId}`);
 };
