@@ -215,6 +215,9 @@ exports.reserveBook = async function(member_id, book_id) {
     [member_id, book_id, now]
   );
 
+  //log reservation
+  await exports.logAction(member_id, `Reserved book ${book_id}.`);
+
   return { success: true, message: 'Book reserved successfully.' };
 };
 
@@ -256,6 +259,9 @@ exports.cancelReservation = async function(member_id, book_id) {
 
   // Delete the reservation
   await exports.query('DELETE FROM reservations WHERE reservation_id = ?', [reservation_id]);
+
+  // Log the cancellation
+  await exports.logAction(member_id, `Canceled reservation for book ${book_id}`);
 
   return { success: true, message: 'Reservation canceled successfully.' };
 };
@@ -498,12 +504,22 @@ exports.deleteAvailableCopy = async function (bookId, memberId) {
 
         // 2. Delete that specific copy
         await exports.query(
+            `DELETE FROM fines WHERE transaction_id IN (SELECT transaction_id FROM borrowtransactions WHERE copy_id = ?)`,
+            [copyId]
+        );
+
+        await exports.query(
+            `DELETE FROM borrowtransactions WHERE copy_id = ?`,
+            [copyId]
+        );
+
+        await exports.query(
             `DELETE FROM bookcopies WHERE copy_id = ?`,
             [copyId]
         );
 
         // 3. Log activity
-        await exports.logAction(memberId, `Deleted copy ID ${copyId} for book ID ${bookId}.`);
+        await exports.logAction(memberId, `Deleted copy ID ${copyId} for book ID ${bookId}`);
 
         return {
             success: true,
@@ -757,6 +773,9 @@ exports.giveBookToNextReserver = async function(bookId) {
       'DELETE FROM reservations WHERE reservation_id = ?',
       [nextReserver.reservation_id]
     );
+
+    //log activity
+    await exports.logAction(nextReserver.member_id, `Received book ${bookId} to as its next reserver.`);
 
     return {
       success: true,
