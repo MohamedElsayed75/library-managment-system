@@ -1,13 +1,15 @@
-body{
+/* Body background */
+body {
   background-image: url(bookshelves.png);
 }
+
+/* Wrapper & Title */
 .books-wrapper {
   padding: 20px;
 }
 
 .books-title {
   display: flex;
-  margin: 10px , auto;
   justify-content: center;
   align-items: center;
   color: #8b5e3c;
@@ -17,7 +19,7 @@ body{
   padding: 20px;
 }
 
-/* --- SEARCH BAR STYLES (NEW) --- */
+/* Search Bar */
 .search-container {
   display: flex;
   justify-content: center;
@@ -40,7 +42,7 @@ body{
   color: #3e2b1e;
   outline: none;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .search-input::placeholder {
@@ -55,24 +57,7 @@ body{
   box-shadow: 0 6px 12px rgba(139, 94, 60, 0.3);
 }
 
-.clear-search-btn {
-  position: absolute;
-  right: 15px;
-  background: none;
-  border: none;
-  color: #8b5e3c;
-  font-weight: bold;
-  font-size: 18px;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.clear-search-btn:hover {
-  color: red;
-  transform: scale(1.2);
-}
-
-/* --- NO RESULTS / LOADING STATE (NEW) --- */
+/* No Results Message */
 .no-results {
   grid-column: 1 / -1; 
   text-align: center;
@@ -84,16 +69,7 @@ body{
   border: 2px dashed #8b5e3c;
 }
 
-.loading-text {
-  text-align: center;
-  font-size: 24px;
-  font-weight: bold;
-  color: #8b5e3c;
-  grid-column: 1 / -1;
-  padding: 20px;
-}
-
-/* --- EXISTING GRID STYLES --- */
+/* Books Grid & Card */
 .books-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
@@ -116,20 +92,21 @@ body{
 .book-card:hover {
   background-color: #e8d6c3;
   transform: translateY(-5px); 
-  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
 
+/* Availability Status */
 .available {
-  color: green;
+  color: #2d7a2d;
   font-weight: bold;
 }
 
 .not-available {
-  color: red;
+  color: #b82d2d;
   font-weight: bold;
 }
 
-/* DETAILS POPUP */
+/* Book Details Popup */
 .book-details-overlay {
   position: fixed;
   top: 0;
@@ -138,7 +115,8 @@ body{
   bottom: 0;
   z-index: 1000;
 
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(2px);
 
   display: flex;
   justify-content: center;
@@ -148,28 +126,33 @@ body{
 .book-details-box {
   position: relative;
   width: 45%;
-  line-height: 30px;
-  border-left: 20px solid #8b5e3c;
-  border-right: 20px solid #8b5e3c;
+  max-width: 600px;
+  line-height: 28px;
+  border-left: 15px solid #8b5e3c;
+  border-right: 15px solid #8b5e3c;
 
-  background-color: #f3e9dc;
-  color: #8b5e3c;
+  background: linear-gradient(145deg, #f3e9dc, #f8f2e4);
+  color: #5b3e2b;
 
-  padding: 40px;
-  border-radius: 8px;
+  padding: 40px 30px;
+  border-radius: 12px;
   text-align: left;
-  font-size: 19px;
-  animation: fadeIn 0.25s ease-out;
+  font-size: 18px;
+
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
+  animation: fadeInScale 0.3s ease-out;
 }
-@keyframes fadeIn {
+
+@keyframes fadeInScale {
   from { opacity: 0; transform: scale(0.95); }
   to { opacity: 1; transform: scale(1); }
 }
 
 .book-details-box p {
-  margin: 3px 0;
+  margin: 5px 0;
 }
 
+/* Close Button */
 .close-btn {
   position: absolute; 
   top: 10px;
@@ -179,70 +162,80 @@ body{
   color: white;
   border: none;
   border-radius: 50%;
-  width: 28px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   cursor: pointer;
   font-weight: bold;
-  font-size: 16px;
-  line-height: 28px; 
+  font-size: 18px;
+  line-height: 32px; 
   text-align: center;
   padding: 0;
+  transition: all 0.2s ease;
 }
 
+.close-btn:hover {
+  background: #a17451;
+  transform: scale(1.1);
+}
+
+/* Borrow Button */
 .borrow-btn {
   width: 100%;
-  padding: 10px;
-  background-color: #d4a373;
+  padding: 12px;
+  background: linear-gradient(135deg, #d4a373, #e3b57f);
   border: none;
   color: #333;
   font-weight: bold;
-  border-radius: 5px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: 0.3s;
-  font-size: 28px;
-  margin-top: 15px;
+  font-size: 22px;
+  margin-top: 20px;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
 }
-.borrow-btn:hover{
-  color: rgb(0, 0, 0);
-  background-color: #00ff59;
+
+.borrow-btn:hover {
+  background: linear-gradient(135deg, #ffe49c, #ffd27f);
+  color: #000;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
 }
 
 .borrow-btn:disabled {
-  background-color: #b8a092 !important;  /* dull brown */
-  color: #777 !important;
-  cursor: not-allowed !important;
-  opacity: 0.6;
-  transform: none !important;
-}
-.borrow-btn:disabled:hover {
-  background-color: #b8a092 !important; /* block hover effect */
+  background-color: #b8a092;
+  color: #777;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
 }
 
-.Register-btn {
+/* Reserve Button */
+.Reserve-btn {
   width: 100%;
-  padding: 10px;
-  background-color: #d4a373;
+  padding: 12px;
+  background: linear-gradient(135deg, #d4a373, #c0e3e3);
   border: none;
   color: #333;
   font-weight: bold;
-  border-radius: 5px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: 0.3s;
-  font-size: 28px;
-  margin-top: 15px;
+  font-size: 22px;
+  margin-top: 20px;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
 }
-.Register-btn:hover{
-  color: rgb(0, 0, 0);
-  background-color: #00fff2;
+
+.Reserve-btn:hover {
+  background: linear-gradient(135deg, #00fff2, #00d4e3);
+  color: #000;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
 }
-.loading-text{
-  width: 100%;
-  padding: 10px;
-  background-color: #d4a373;
-  border: none;
-  color: #333;
-  font-weight: bold;
-  border-radius: 5px;
-  font-size: 28px;
-  margin-top: 15px;
+
+.Reserve-btn:disabled {
+  background-color: #b8a092;
+  color: #777;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
 }
