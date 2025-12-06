@@ -101,26 +101,46 @@ exports.hasOverdueTransactions = async function(member_id) {
 };
 
 /**
- * Checks if a member has reached the borrow limit.
+ * Checks if a member has reached the borrow/reservation limit (3 books total).
  * @param {number} member_id - The ID of the member.
- * @returns {Promise<boolean>} - True if the member has reached the borrow limit, otherwise false.
+ * @returns {Promise<boolean>} - True if the member has reached the limit, otherwise false.
  */
 exports.hasReachedBorrowLimit = async function(member_id) {
-    const rows = await exports.query(
-        `
-        SELECT transaction_id
-        FROM borrowtransactions
-        WHERE member_id = ?
-          AND status = 'borrowed'
-        LIMIT 3
-        `,
-        [member_id]
-    );
+  // Count currently borrowed books
+  const borrowedRows = await exports.query(
+    `
+    SELECT COUNT(*) AS borrowedCount
+    FROM borrowtransactions
+    WHERE member_id = ?
+      AND status = 'borrowed'
+    `,
+    [member_id]
+  );
+  const borrowedCount = borrowedRows[0].borrowedCount;
 
-    // return true if at least 3 borrowed transactions exist
-    return rows.length >= 3;
-}
+  // Count active reservations
+  const reservedRows = await exports.query(
+    `
+    SELECT COUNT(*) AS reservedCount
+    FROM reservations
+    WHERE member_id = ?
+    `,
+    [member_id]
+  );
+  const reservedCount = reservedRows[0].reservedCount;
 
+  const total = borrowedCount + reservedCount;
+
+  // Return true if total borrowed + reserved >= 3
+  return total >= 3;
+};
+
+/**
+ * Checks if a member has borrowed a specific book.
+ * @param {number} member_id - The ID of the member.
+ * @param {number} book_id - The ID of the book.
+ * @returns {Promise<boolean>} - True if the member has borrowed the book, otherwise false.
+ */
 exports.hasBorrowedBook = async function(member_id, book_id) {
     //check if member already borrowed a copy of this book
     const rows = await exports.query(
@@ -168,6 +188,80 @@ exports.getBorrowedBooksByMember = async function(memberId) {
 };
 
 /**
+ * Checks if a book is reserved by a specific member.
+ * @param {number} member_id - The ID of the member.
+ * @param {number} book_id - The ID of the book.
+ * @returns {Promise<boolean>} - True if the book is reserved by the member, otherwise false.
+ */
+exports.isBookReservedByMember = async function(member_id, book_id) {
+  const rows = await exports.query(
+    'SELECT * FROM reservations WHERE member_id = ? AND book_id = ?',
+    [member_id, book_id]
+  );
+  return rows.length > 0; // true if reserved
+};
+
+/**
+ * Reserves a book for a member.
+ * @param {number} member_id - The ID of the member.
+ * @param {number} book_id - The ID of the book.
+ * @returns {Promise<{success: boolean, message: string}>} - An object indicating success and a message.        
+ */
+exports.reserveBook = async function(member_id, book_id) {
+  // Insert new reservation
+  const now = new Date();
+  await exports.query(
+    'INSERT INTO reservations (member_id, book_id, reservation_date) VALUES (?, ?, ?)',
+    [member_id, book_id, now]
+  );
+
+  return { success: true, message: 'Book reserved successfully.' };
+};
+
+/**
+ * Retrieves a list of reservations for a member.
+ * @param {number} member_id - The ID of the member.
+ * @returns {Promise<Array<{reservation_id: number, book_title: string, isbn: string, reservation_date: Date}>>} - A list of reservations with book details.
+ */
+exports.getReservationsForMember = async function(member_id) {
+  const rows = await exports.query(
+    `SELECT r.reservation_id, b.title as book_title, b.isbn, r.reservation_date, b.book_id 
+    FROM reservations r 
+    JOIN books b ON r.book_id = b.book_id
+    WHERE r.member_id = ? 
+    ORDER BY r.reservation_date DESC`,
+    [member_id]
+  );
+  return rows;
+};
+
+/**
+ * Cancels a reservation for a member.
+ * @param {number} reservation_id - The ID of the reservation.
+ * @param {number} member_id - The ID of the member.
+ * @returns {Promise<{success: boolean, message: string}>} - An object indicating success and a message.
+ */
+exports.cancelReservation = async function(member_id, book_id) {
+  // Check if reservation exists
+  const res = await exports.query(
+    'SELECT * FROM reservations WHERE member_id = ? AND book_id = ?',
+    [member_id, book_id]
+  );
+
+  if (res.length === 0) {
+    return { error: 'Reservation not found.' };
+  }
+
+  const reservation_id = res[0].reservation_id;
+
+  // Delete the reservation
+  await exports.query('DELETE FROM reservations WHERE reservation_id = ?', [reservation_id]);
+
+  return { success: true, message: 'Reservation canceled successfully.' };
+};
+
+
+/**
  * Gathers profile-related data for a member, including fines, borrowed, and reserved books.
  * @param {number} memberId - The ID of the member.
  * @returns {Promise<{totalFines: string, borrowedBooks: Array<Object>, reservedBooks: Array<Object>}>} - An object containing total fines (as string), borrowed books, and reserved books.
@@ -188,22 +282,7 @@ exports.getProfileData = async function(memberId) {
     const borrowedBooks = await exports.getBorrowedBooksByMember(memberId);
 
     // Get reserved books
-    const reservedBooks = await exports.query(
-        `SELECT
-            r.reservation_id,
-            r.reservation_date,
-            b.book_id,
-            b.title,
-            a.name AS author,
-            b.genre,
-            b.language,
-            b.publication_year
-          FROM reservations r
-          INNER JOIN books b ON r.book_id = b.book_id
-          INNER JOIN author a ON b.author_id = a.author_id
-          WHERE r.member_id = ?`,
-        [memberId]
-    );
+    const reservedBooks = await exports.getReservationsForMember(memberId);
 
     return { totalFines, borrowedBooks, reservedBooks };
 };
@@ -626,4 +705,66 @@ exports.payFines = async function(memberId) {
     );
 
     await exports.logAction(memberId, `Paid all fines`);
+};
+
+
+// -----------------------------------------------------------------------------
+// RESERVE FUNCTIONALITY
+// -----------------------------------------------------------------------------
+/**
+ * Gets the next reserver for a given book.
+ * @param {number} bookId - The ID of the book.
+ * @returns {Promise<Object|null>} The reservation info of the next reserver, or null if no one has reserved the book.
+ */
+exports.getNextReserverForBook = async (bookId) => {
+  const rows = await exports.query(
+    `SELECT r.reservation_id, r.member_id, r.reservation_date, m.name AS member_name
+     FROM reservations r
+     JOIN members m ON r.member_id = m.member_id
+     WHERE r.book_id = ?
+     ORDER BY r.reservation_date ASC, r.reservation_id ASC
+     LIMIT 1`,
+    [bookId]
+  );
+
+  return rows.length > 0 ? rows[0] : null;
+};
+
+/**
+ * Attempts to give a book to the next reserver.
+ * @param {number} bookId - The ID of the book.
+ * @returns {Promise<Object>} An object containing success, message, and member_id.
+ *   - success: true if the book was given to the next reserver, false otherwise.
+ *   - message: A message indicating the result of the operation.
+ *   - member_id: The ID of the next reserver, if successful.
+ */
+exports.giveBookToNextReserver = async function(bookId) {
+  try {
+    // Get the next reserver
+    const nextReserver = await exports.getNextReserverForBook(bookId);
+    if (!nextReserver) {
+      return { success: false, error: "No one has reserved this book yet." };
+    }
+
+    // Attempt to give the book
+    const result = await exports.createTransaction(nextReserver.member_id, bookId);
+    if (result.error) {
+      return { success: false, error: `Could not give book to next reserver: ${result.error}` };
+    }
+
+    // Delete the reservation now that the book is given
+    await exports.query(
+      'DELETE FROM reservations WHERE reservation_id = ?',
+      [nextReserver.reservation_id]
+    );
+
+    return {
+      success: true,
+      member_id: nextReserver.member_id,
+      message: `Book given to next reserver, member_id ${nextReserver.member_id}`
+    };
+
+  } catch (err) {
+    return { success: false, error: `Server error: ${err.message}` };
+  }
 };

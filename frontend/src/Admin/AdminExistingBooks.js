@@ -57,7 +57,10 @@ const AdminExistingBooks = ({ member }) => {
         return;
       }
 
-      alert("Copy added for " + book_title + " !");
+      let msg = "Copy added to " + book_title;
+      if (data.message) msg += "\n" + data.message;
+      alert(msg);
+
       fetchBooks();
     } catch (err) {
       console.error("Error adding copy:", err);

@@ -1,20 +1,30 @@
+import React from "react";
+
 /////////////////////////////
 // ReservedBooks Component
 /////////////////////////////
-const ReservedBooks = ({ reserved, memberId, refresh }) => {
+const ReservedBooks = ({ reservedBooks, memberId, refresh }) => {
 
   /////////////////////////////
   // Handle Cancel Reservation
   /////////////////////////////
-  const handleCancel = async (reserveId) => {
+  const handleCancel = async (reserve) => {
     try {
-      const res = await fetch(`/api/members/${memberId}/reserved/${reserveId}/cancel`, {
-        method: "POST",
-      });
+      const res = await fetch(
+        `http://localhost:5000/user/cancelReservation`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ member_id: memberId, book_id: reserve.book_id }),
+        }
+      );
 
       const data = await res.json();
       alert(data.message);
-      refresh(); // reload reserved books
+
+      // Reload reserved books after cancellation
+      refresh();
+
     } catch (err) {
       console.error("Cancel failed:", err);
     }
@@ -27,17 +37,19 @@ const ReservedBooks = ({ reserved, memberId, refresh }) => {
     <div className="reserved-box">
       <h2>Reserved Books</h2>
 
-      {reserved.length === 0 ? (
+      {reservedBooks.length === 0 ? (
         <p>No reserved books.</p>
       ) : (
         <ul>
-          {reserved.map((r) => (
-            <li key={r.reserve_id}>
-              <strong>{r.title}</strong> — {r.status}
+          {reservedBooks.map((r) => (
+            <li key={r.reservation_id} className="borrowed-item">
+              <div className="borrow-info">
+                <strong>{r.book_title}</strong> — Reserved on {new Date(r.reservation_date).toLocaleDateString()}
+              </div>
 
               <button
                 className="cancel-btn"
-                onClick={() => handleCancel(r.reserve_id)}
+                onClick={() => handleCancel(r)}
               >
                 Cancel
               </button>

@@ -4,10 +4,17 @@ const router = express.Router();
 const { 
   createTransaction, 
   hasOverdueTransactions,
+
   hasReachedBorrowLimit,
   hasBorrowedBook,
-  getProfileData, 
   returnTransaction,
+
+  isBookReservedByMember,
+  reserveBook,
+  cancelReservation,
+
+  getProfileData, 
+  
   checkAndApplyFines,
   payFines
 } = require("../database/database.js");
@@ -19,24 +26,26 @@ router.post("/borrow", async (req, res) => {
     try {
         const book_id  = req.body.book_id;
         const member_id = req.body.member_id;
-
-
-
-        const hasOverdue = await hasOverdueTransactions(member_id);
-        if (hasOverdue) {
-            return res.status(400).json({ message: "Cannot borrow books while you have overdue transaction(s)." });
-        }
-
-        const hasReachedLimit = await hasReachedBorrowLimit(member_id); 
-        if (hasReachedLimit) {
-            return res.status(400).json({ message: "You have reached your borrow limit of 3 books." });
-        }
-
+        
+        // Check if the book has already been borrowed
         const hasBorrowedBookBefore = await hasBorrowedBook(member_id, book_id);
         if (hasBorrowedBookBefore) {
             return res.status(400).json({ message: "You have already borrowed this book." });
         }
 
+        // Check for overdue transactions
+        const hasOverdue = await hasOverdueTransactions(member_id);
+        if (hasOverdue) {
+            return res.status(400).json({ message: "Cannot borrow books while you have overdue transaction(s)." });
+        }
+
+        // Check borrow limit
+        const hasReachedLimit = await hasReachedBorrowLimit(member_id); 
+        if (hasReachedLimit) {
+            return res.status(400).json({ message: "You have reached your borrow limit of 3 books." });
+        }
+
+        // Create borrow transaction
         const result = await createTransaction(member_id, book_id);
 
         if (result.error) return res.status(400).json({ message: result.error });
@@ -48,13 +57,74 @@ router.post("/borrow", async (req, res) => {
     }
 });
 
+
+/////////////////////////////
+// POST Reserve Book
+/////////////////////////////
+router.post("/reserve", async (req, res) => {
+  try {
+      const book_id  = req.body.book_id;
+      const member_id = req.body.member_id;
+
+      // Check if the book has already been borrowed
+      const hasBorrowedBookBefore = await hasBorrowedBook(member_id, book_id);
+      if (hasBorrowedBookBefore) {
+          return res.status(400).json({ message: "You have already borrowed this book." });
+      }
+
+      // Check if the book has already been reserved
+      const isBookReserved = await isBookReservedByMember(member_id, book_id);
+      if (isBookReserved) {
+          return res.status(400).json({ message: "You have already reserved this book." });
+      }
+
+      // Check for overdue transactions
+      const hasOverdue = await hasOverdueTransactions(member_id);
+      if (hasOverdue) {
+          return res.status(400).json({ message: "Cannot reserve books while you have overdue transaction(s)." });
+      }
+
+      // Check borrow limit
+      const hasReachedLimit = await hasReachedBorrowLimit(member_id); 
+      if (hasReachedLimit) {
+          return res.status(400).json({ message: "You have reached your borrow limit of 3 books." });
+      }
+
+      const result = await reserveBook(member_id, book_id);
+
+      if (result.error) return res.status(400).json({ message: result.error });
+
+      return res.json({ message: "Book reserved successfully" });
+  } catch (error) {
+      console.error("Reserve route error:", error);
+      return res.status(500).json({ message: "Server error while reserving the book." });
+  }
+});
+
+/////////////////////////////
+// POST Cancel Reservation
+/////////////////////////////
+router.post("/cancelReservation", async (req, res) => {
+  try {
+      const book_id  = req.body.book_id;
+      const member_id = req.body.member_id;
+
+      const result = await cancelReservation(member_id, book_id);
+
+      if (result.error) return res.status(400).json({ message: result.error });
+
+      return res.json({ message: "Reservation canceled successfully." });
+  } catch (error) {
+      console.error("Cancel route error:", error);
+      return res.status(500).json({ message: "Server error while canceling the reservation." });
+  }
+});
+
 /////////////////////////////
 // GET Member Profile
 /////////////////////////////
 router.get("/profile", async (req, res) => {
   const memberId = req.query.memberId;
-
-  if (!memberId) return res.status(400).json({ error: "Member ID is required" });
 
   await checkAndApplyFines(memberId);
 

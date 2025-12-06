@@ -165,3 +165,73 @@ li {
 .return-btn:active {
   transform: scale(0.95);
 }
+
+
+
+/* Reserved books box (matches borrowed box styling) */
+.reserved-box {
+  background-color: #fff3e6;
+  border-left: 20px solid #8b5e3c;
+  border-right: 20px solid #8b5e3c;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.reserved-box h2 {
+  color: #000000;
+  margin-bottom: 15px;
+}
+
+/* List styling */
+ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+li.borrowed-item {
+  display: flex;
+  justify-content: space-between; /* title left, button right */
+  align-items: center;
+  background: #f3e9dc;
+  padding: 12px 15px;
+  border-radius: 6px;
+  border-left: 5px solid #8b5e3c;
+  border-right: 5px solid #8b5e3c;
+  margin-bottom: 10px;
+}
+
+.borrow-info {
+  font-size: 18px;
+  color: #8b5e3c;
+  font-weight: 500;
+}
+
+/* Cancel button */
+.cancel-btn {
+  background-color: #ff6b6b;          /* soft red */
+  border: none;
+  color: white;
+  padding: 8px 16px;
+  font-size: 15px;
+  font-weight: bold;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.25s ease;
+}
+
+.cancel-btn:hover {
+  background-color: #e63946;          /* darker red */
+  transform: scale(1.05);
+}
+
+.cancel-btn:active {
+  transform: scale(0.95);
+}
+
+/* No reserved books text */
+.reserved-box p {
+  padding-top: 10px;
+  font-size: 26px;
+  font-weight: bold;
+  color: #8b5e3c;
+}

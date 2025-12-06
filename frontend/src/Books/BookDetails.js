@@ -4,7 +4,7 @@ const BookDetails = ({ book, member, refresh, onClose }) => {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isBorrowing, setIsBorrowing] = useState(false);
-  const [isReserving, setIsReserving] = useState(false); // new state for reservation
+  const [isReserving, setIsReserving] = useState(false); 
 
   /////////////////////////////
   // Borrow Book

@@ -5,7 +5,8 @@ const {
     getAllBooks,
     createBook,
     createCopy,
-    deleteAvailableCopy
+    deleteAvailableCopy,
+    giveBookToNextReserver
 } = require("../database/database.js");
 
 /////////////////////////////
@@ -42,15 +43,23 @@ router.post("/addBook", async (req, res) => {
 // POST Add Copy
 /////////////////////////////
 router.post("/addCopy", async (req, res) => {
-    try {
-        const { book_id, member_id } = req.body;
+  try {
+    const { book_id, member_id } = req.body;
 
-        await createCopy(book_id, member_id);
-        res.json({ success: true, message: "Copy added successfully" });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false, errorMessage: "Error adding copy" });
+    await createCopy(book_id, member_id);
+
+    const response = await giveBookToNextReserver(book_id);
+
+    if (response.success) {
+      res.json({ success: true, message: response.message });
+    } else {
+      res.json({ success: false, message: response.error });
     }
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Error adding copy" });
+  }
 });
 
 /////////////////////////////

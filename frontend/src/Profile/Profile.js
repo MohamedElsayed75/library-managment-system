@@ -92,7 +92,7 @@ const Profile = () => {
         />
 
         <ReservedBooks
-          reserved={profileData.reservedBooks}
+          reservedBooks={profileData.reservedBooks}
           memberId={member?.member_id}
           refresh={() => fetchProfileData(member.member_id)}
         />
