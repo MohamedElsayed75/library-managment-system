@@ -20,6 +20,9 @@ app.use("/books", booksRouter);
 const userRouter = require("./routes/user");
 app.use("/user", userRouter);
 
+const adminRouter = require("./routes/admin");
+app.use("/admin", adminRouter);
+
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
