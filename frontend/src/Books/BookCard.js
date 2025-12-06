@@ -3,7 +3,6 @@ const BookCard = ({ book, member, onClick }) => {
   const coverUrl = book.isbn
     ? `https://covers.openlibrary.org/b/isbn/${book.isbn}-L.jpg`
     : null;
-
   return (
     <div className="book-card" onClick={onClick}>
       
@@ -42,7 +41,7 @@ const BookCard = ({ book, member, onClick }) => {
       <h3>{book.title}</h3>
 
       <p>
-        <strong>Author:</strong> {book.authors}
+        <strong>Author:</strong> {book.author_name}
       </p>
 
       <p>

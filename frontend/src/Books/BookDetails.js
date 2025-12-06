@@ -5,6 +5,8 @@ const BookDetails = ({ book, member, refresh, onClose }) => {
   const [successMessage, setSuccessMessage] = useState("");
   const [isBorrowing, setIsBorrowing] = useState(false);
 
+  console.log(book);
+
   const handleBorrow = async () => {
     setErrorMessage("");
     setSuccessMessage("");
@@ -58,7 +60,7 @@ const BookDetails = ({ book, member, refresh, onClose }) => {
         <p><strong>Genre:</strong> {book.genre}</p>
         <p><strong>Language:</strong> {book.language}</p>
         <p><strong>Publication Year:</strong> {book.publication_year}</p>
-        <p><strong>Author(s):</strong> {book.authors}</p>
+        <p><strong>Author:</strong> {book.author_name}</p>
         <p><strong>Publisher:</strong> {book.publisher_name}</p>
         <p><strong>Copies:</strong> {book.copy_count}</p>
 
