@@ -37,6 +37,9 @@ const Admin = () => {
 
   return (
     <div className="admin-container">
+            <button className="back-button" onClick={() => navigate("/")}>
+        Back
+      </button>
       <h2 className="admin-title">
         Admin Panel
       </h2>
