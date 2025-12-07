@@ -144,6 +144,7 @@ const AdminExistingBooks = ({ member }) => {
                 <button
                   className="delete"
                   onClick={() => handleDelete(book.book_id)}
+                  disabled={book.copy_count === 0}
                 >
                   Delete Copy
                 </button>

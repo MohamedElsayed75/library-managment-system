@@ -169,6 +169,12 @@
     background-color: #a71d2a;
 }
 
+.book-actions .delete:disabled {
+    background-color: #f5a5a5; 
+    cursor: not-allowed;
+    opacity: 0.6; 
+}
+
 /* -------------------- Pagination -------------------- */
 .pagination {
     margin-top: 20px;
