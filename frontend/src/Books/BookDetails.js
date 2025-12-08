@@ -77,7 +77,10 @@ const BookDetails = ({ book, member, refresh, onClose }) => {
       setIsReserving(false);
     }
   };
-
+  
+  /////////////////////////////
+  // JSX
+  /////////////////////////////
   return (
     <div className="book-details-overlay">
       <div className="book-details-box">
