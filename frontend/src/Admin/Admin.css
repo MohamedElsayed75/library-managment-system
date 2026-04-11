@@ -1,0 +1,216 @@
+/* -------------------- Admin Container -------------------- */
+.admin-container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 20px;
+}
+
+.admin-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 45%;
+  margin: 30px auto;   
+  border-left: 20px solid #8b5e3c;
+  border-right: 20px solid #8b5e3c;
+
+  background-color: #f3e9dc;
+  padding: 30px 30px 30px 30px; 
+  color: #8b5e3c;
+  border-radius: 8px;
+}
+
+/* -------------------- Admin Sections -------------------- */
+.admin-section {
+    background: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* -------------------- Add Book Form -------------------- */
+.add-book-form {
+    display: flex;
+    flex-direction: column;   
+    gap: 15px;              
+    width: 100%;             
+}
+
+.add-book-form input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.add-btn {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.add-btn:hover {
+    background-color: #218838;
+}
+
+/* -------------------- Messages -------------------- */
+.message {
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.message.success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.message.error {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* -------------------- Existing Books List -------------------- */
+.admin-book-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.admin-book-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    background: white;
+    border-radius: 4px;
+}
+
+.admin-book-item img {
+    width: 90px;
+    height: 130px;
+    object-fit: cover;
+    border-radius: 5px;
+}
+
+.no-image {
+    width: 90px;
+    height: 130px;
+    background: #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 5px;
+    font-size: 12px;
+    color: #555;
+}
+
+/* Book Details */
+.book-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.book-details strong {
+    font-size: 16px;
+}
+
+.book-details span {
+    font-size: 14px;
+    color: #333;
+}
+
+.book-details small {
+    font-size: 12px;
+    color: #666;
+}
+
+.book-details p {
+    margin-top: 5px;
+    margin-bottom: 0;
+}
+
+/* Action Buttons */
+.book-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.book-actions button {
+    border: none;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    color: white;
+}
+
+.book-actions .add-copy {
+    background-color: green;
+}
+
+.book-actions .add-copy:hover {
+    background-color: #006400;
+}
+
+.book-actions .delete {
+    background-color: red;
+}
+
+.book-actions .delete:hover {
+    background-color: #a71d2a;
+}
+
+.book-actions .delete:disabled {
+    background-color: #f5a5a5; 
+    cursor: not-allowed;
+    opacity: 0.6; 
+}
+
+/* -------------------- Pagination -------------------- */
+.pagination {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.pagination button {
+    margin: 0 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.pagination button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination button.active {
+    font-weight: bold;
+}
+
+.back-button {
+  position: absolute;
+  top: 50px;
+  left: 50px;
+
+  border-left: 20px solid #8b5e3c;
+  border-right: 20px solid #8b5e3c;
+
+  background-color: #f3e9dc;
+  color: #8b5e3c;
+
+  padding: 15px 25px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 20px;
+  transition: 0.3s;
+}

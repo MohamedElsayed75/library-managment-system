@@ -1,0 +1,64 @@
+import React from "react";
+
+/////////////////////////////
+// BorrowedBooks Component
+/////////////////////////////
+const BorrowedBooks = ({ borrowedBooks, memberId, refresh }) => {
+
+  /////////////////////////////
+  // Handle Returning a Book
+  /////////////////////////////
+  const handleReturn = async (transactionId) => {
+    try {
+      const res = await fetch(
+        `http://localhost:5000/user/return?transactionId=${transactionId}`,
+        { method: "POST" }
+      );
+
+      const data = await res.json();
+      alert(data.message);
+
+      // Reload borrowed books after returning
+      refresh();
+
+    } catch (err) {
+      console.error("Return failed:", err);
+    }
+  };
+
+  /////////////////////////////
+  // JSX
+  /////////////////////////////
+  return (
+    <div className="borrowed-box">
+      <h2>Borrowed Books</h2>
+
+      {borrowedBooks.length === 0 ? (
+        <p>No borrowed books.</p>
+      ) : (
+        <ul>
+        {borrowedBooks.map((b) => (
+          <li key={b.transaction_id} className="borrowed-item">
+            <div className="borrow-info">
+              <strong>{b.book_title}</strong> — {b.days_remaining} day
+              {b.days_remaining !== 1 ? "s" : ""} remaining
+            </div>
+
+            <button
+              className="return-btn"
+              onClick={() => handleReturn(b.transaction_id)}
+            >
+              Return
+            </button>
+          </li>
+        ))}
+      </ul>
+      )}
+    </div>
+  );
+};
+
+/////////////////////////////
+// Export BorrowedBooks
+/////////////////////////////
+export default BorrowedBooks;
